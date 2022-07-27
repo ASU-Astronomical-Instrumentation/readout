@@ -44,7 +44,7 @@ class rfsocInterface:
         self.accum_snap = None
         self.selectedBitstream = None
 
-    def uploadOverlay(self, bitstream="/bitstreams/blastv1.3.bit"):
+    def uploadOverlay(self, bitstream="./blastv1.3.bit"):
         # FIRMWARE UPLOAD
         self.firmware = Overlay(bitstream,ignore_version=True)
         self.selectedBitstream = bitstream
@@ -59,7 +59,7 @@ class rfsocInterface:
 
         return 0
     
-    def getFirmwareObjects(self, bitstream="/bitstreams/blastv1.3.bit"):
+    def getFirmwareObjects(self, bitstream="./blastv1.3.bit"):
         self.firmware = Overlay(bitstream, ignore_version=True,download=False)
         self.bram_ADCI = self.firmware.ADC_I.BRAM_SNAP_0
         self.bram_ADCQ = self.firmware.ADC_Q.BRAM_SNAP_0
@@ -86,8 +86,9 @@ class rfsocInterface:
         dst_ip_int32 = int("c0a80328",16)
         src_mac0_int32 = int("deadbeef",16)
         src_mac1_int16 = int("feed",16)
-        dst_mac0_int32 = int("5d092bb0",16) #  startech dongle 80:3f:5d:09:6b:1d
-        dst_mac1_int16 = int("803f",16) 
+        #dst_mac0_int32 = int("5d092bb0",16) #  startech dongle 80:3f:5d:09:6b:1d
+        dst_mac0_int32 = int("4c680991",16) #
+        dst_mac1_int16 = int("00e0",16) # 00:e0:4c:68:09:91
 
         # write values
         ip_reg.write( 0x00, src_ip_int32) 

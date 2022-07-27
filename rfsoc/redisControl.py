@@ -22,7 +22,7 @@ import json
 from time import sleep
 
 class cli:
-    def __init__(self, host="192.168.2.10"):
+    def __init__(self, host="192.168.2.80"):
         self.r = redis.Redis(host=host)
         self.p = self.r.pubsub() 
         

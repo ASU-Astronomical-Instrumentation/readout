@@ -316,9 +316,9 @@ class rfsocInterface:
         dsp_regs.write(0x08, accum_length | accum_rst | sync_in)
         return 0
 
-    def get_snap_data(mux_sel):
+    def get_snap_data(self, mux_sel):
         # WIDE BRAM
-        axi_wide = firmware.axi_wide_ctrl# 0x0 max count, 0x8 capture rising edge trigger
+        axi_wide = self.firmware.axi_wide_ctrl# 0x0 max count, 0x8 capture rising edge trigger
         max_count = 32768
         #mux_sel = 3
         axi_wide.write(0x08, mux_sel<<1) # mux select 0-adc, 1-pfb, 2-ddc, 3-accum
@@ -382,19 +382,19 @@ class rfsocInterface:
         return I, Q
     
     def get_adc_data(self):
-        I, Q = get_snap_data(0)
+        I, Q = self.get_snap_data(0)
         return I,Q
 
     def get_pfb_data(self):
-        I, Q = get_snap_data(1)
+        I, Q = self.get_snap_data(1)
         return I, Q
 
     def get_ddc_data(self):
-        I, Q = get_snap_data(2)
+        I, Q = self.get_snap_data(2)
         return I, Q 
 
-    def get_accum_data(self,slp=.3):
-        I, Q = get_snap_data(3)
+    def get_accum_data(self):
+        I, Q = self.get_snap_data(3)
         return I, Q  
 
     def writeWaveform(self, waveform, vna=False, verbose=False):
@@ -415,11 +415,19 @@ class rfsocInterface:
         verbose : boolean
             (DEPRECATED) -> Enabled various print statements, most of which have been removed.
         """
-        LUT_I, LUT_Q, DDS_I, DDS_Q, freqs = self.genWaveform(waveform, vna=vna, verbose=True)
+        LUT_I, LUT_Q, DDS_I, DDS_Q, freqs = self.genWaveform(waveform, vna=vna, verbose=verbose)
         self.load_bin_list(freqs)
         self.load_waveform_into_mem(freqs, LUT_I, LUT_Q, DDS_I, DDS_Q)
+        np.save("freqs.npy",freqs)
 
-    def _loop_test(f_center, freqs):
+    def set_NCLO(self, lofreq):
+        rf_data_conv = self.firmware.usp_rf_data_converter_0
+        rf_data_conv.adc_tiles[0].blocks[0].MixerSettings['Freq']=lofreq
+        rf_data_conv.dac_tiles[1].blocks[3].MixerSettings['Freq']=lofreq
+        rf_data_conv.adc_tiles[0].blocks[0].UpdateEvent(xrfdc.EVENT_MIXER)
+        rf_data_conv.dac_tiles[1].blocks[3].UpdateEvent(xrfdc.EVENT_MIXER)
+
+    def sweep(self, f_center, freqs):
         """
         
         """
@@ -431,18 +439,14 @@ class rfsocInterface:
 
         flos = np.arange(flo_start, flo_stop, flo_step)
 
-        rf_data_conv = firmware.usp_rf_data_converter_0
-
         def temp(lofreq):
-            rf_data_conv.adc_tiles[0].blocks[0].MixerSettings['Freq']=lofreq
-            rf_data_conv.dac_tiles[1].blocks[3].MixerSettings['Freq']=lofreq
-            rf_data_conv.adc_tiles[0].blocks[0].UpdateEvent(xrfdc.EVENT_MIXER)
-            rf_data_conv.dac_tiles[1].blocks[3].UpdateEvent(xrfdc.EVENT_MIXER)
+            self.set_NCLO(lofreq)
+            # self.set_ValonLO function here
             # Read values and trash initial read, suspecting linear delay is cause..
             Naccums = 5
             I, Q = [], []
             for i in range(Naccums):
-                It, Qt = get_snap_data(3)
+                It, Qt = self.get_accum_data()
                 I.append(It)
                 Q.append(Qt)
             I = np.array(I)
@@ -471,8 +475,15 @@ class rfsocInterface:
 
         return (f, sweep_Z_f)
     
-    def vnaSweep(self, freqs, f_center=600.e6):
-        f, sweep_Z_f = self._loop_test(f_center=f_center, freqs=freqs)
+    def vnaSweep(self, f_center=600):
+        """
+        vnaSweep: perform a stepped frequency sweep centered at f_center and save result as s21.npy file
+
+        f_center: center frequency for sweep in [MHz]
+
+        """
+        freqs = np.load("freqs.npy")
+        f, sweep_Z_f = self.sweep(f_center, freqs)
         np.save("s21.npy", np.array((f, sweep_Z_f)))
-        print(" Done.")
+        print("s21.npy saved.")
 

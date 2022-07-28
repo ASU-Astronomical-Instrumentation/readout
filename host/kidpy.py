@@ -38,6 +38,7 @@ main_opts= ['Upload firmware',
             'Initialize system & UDP conn',
             'Write test comb (single or multitone)',
             'Write stored comb from config file',
+            'VNA sweep',
             'I <-> Q Phase offset',
             'Take Raw Data',
             #'',
@@ -175,9 +176,18 @@ def main_opt(r, p, udp):
                 print("Done")
 
         if opt == 4:
+            os.system("clear")
+            print("VNA sweep command sent")
+            cmd = {"cmd" : "vnaSweep", "args":[]}
+            cmdstr = json.dumps(cmd)
+            r.publish("picard", cmdstr)
+            if waitForFree(r, 1, 10):
+                print("Done")
+        
+        if opt == 5:
             print("Not Implemented")
 
-        if opt == 5:
+        if opt == 6:
             t = 0
             try:
                 t = int(input("How many seconds of data?: "))
@@ -205,7 +215,7 @@ def main_opt(r, p, udp):
 
                 
 
-        if opt == 6: # get system state
+        if opt == 7: # get system state
            exit()
 
         return 0

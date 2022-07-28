@@ -82,6 +82,7 @@ class cli:
                             self.rfsoc.initRegs()
                             print("Done")
                             self.r.set("status", "free")
+                        
                         elif cmd['cmd'] == "ulWaveform":
                             if (len(cmd['args']) == 0):
                                 print("Writing Full Comb")
@@ -93,6 +94,13 @@ class cli:
                                 self.rfsoc.writeWaveform(np.array(cmd['args'][0]), vna=False)
                                 print("Done")
                             self.r.set("status", "free")
+                        
+                        elif cmd['cmd'] == "vnaSweep":
+                            print("Starting VNA sweep")
+                            self.rfsoc.vnaSweep()
+                            print("Done")
+                            self.r.set("status", "free")
+                        
                         elif cmd['cmd'] == "exit":
                             print("Exiting as Commanded")
                             return

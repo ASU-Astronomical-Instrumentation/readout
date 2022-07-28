@@ -37,11 +37,11 @@ class rfsocInterface:
     def __init__(self):
         print("init")
         self.firmware = None
-        self.bram_ADCI = None
-        self.bram_ADCQ = None
-        self.pfbIQ = None
-        self.ddc_snap = None
-        self.accum_snap = None
+        #self.bram_ADCI = None
+        #self.bram_ADCQ = None
+        #self.pfbIQ = None
+        #self.ddc_snap = None
+        #self.accum_snap = None
         self.selectedBitstream = None
 
     def uploadOverlay(self, bitstream="./single_chan_4eth_v8p2.bit"):
@@ -316,27 +316,6 @@ class rfsocInterface:
         dsp_regs.write(0x08, accum_length | accum_rst | sync_in)
         return 0
 
-    def __get_adc_data_helper(self, snap):
-        snap.write(0x04,0)       #
-        snap.write(0x04,2**31)   # toggling sync clear
-        snap.write(0x04,2**29)   #
-        d = np.zeros(2**11)    # bram data
-
-        for i in range(2**11):
-            snap.write(0x00,i<<(32-11)) # write address space to read
-            for j in range(1):
-                snap.write(0x04,j<<19)
-                data = snap.read(0x08)
-                d[i*1+j]= data
-
-        snap_data = np.array(d).astype("int32")
-        snap_data_0 = ((snap_data >> 16).astype("int16"))#.astype('float') # decoding concatenated values
-        snap_data_1 = ((snap_data & (2**(16)-1)).astype("int16"))#.astype('float')
-        d2 = np.zeros(2*2**11)# bram data
-        d2[0::2]=snap_data_1
-        d2[1::2]=snap_data_0
-        return d2
-
     def get_snap_data(mux_sel):
         # WIDE BRAM
         axi_wide = firmware.axi_wide_ctrl# 0x0 max count, 0x8 capture rising edge trigger
@@ -406,7 +385,7 @@ class rfsocInterface:
         I, Q = get_snap_data(0)
         return I,Q
 
-    def get_pfb_data(self): # make sure to toggle sync (gpio) first
+    def get_pfb_data(self):
         I, Q = get_snap_data(1)
         return I, Q
 
@@ -439,3 +418,61 @@ class rfsocInterface:
         LUT_I, LUT_Q, DDS_I, DDS_Q, freqs = self.genWaveform(waveform, vna=vna, verbose=True)
         self.load_bin_list(freqs)
         self.load_waveform_into_mem(freqs, LUT_I, LUT_Q, DDS_I, DDS_Q)
+
+    def _loop_test(f_center, freqs):
+        """
+        
+        """
+        N_steps =  500 #
+        tone_diff = np.diff(freqs)[0]/1e6 # MHz
+        flo_step = tone_diff/N_steps
+        flo_start = f_center - tone_diff/2. #256
+        flo_stop =  f_center + tone_diff/2. #256
+
+        flos = np.arange(flo_start, flo_stop, flo_step)
+
+        rf_data_conv = firmware.usp_rf_data_converter_0
+
+        def temp(lofreq):
+            rf_data_conv.adc_tiles[0].blocks[0].MixerSettings['Freq']=lofreq
+            rf_data_conv.dac_tiles[1].blocks[3].MixerSettings['Freq']=lofreq
+            rf_data_conv.adc_tiles[0].blocks[0].UpdateEvent(xrfdc.EVENT_MIXER)
+            rf_data_conv.dac_tiles[1].blocks[3].UpdateEvent(xrfdc.EVENT_MIXER)
+            # Read values and trash initial read, suspecting linear delay is cause..
+            Naccums = 5
+            I, Q = [], []
+            for i in range(Naccums):
+                It, Qt = get_snap_data(3)
+                I.append(It)
+                Q.append(Qt)
+            I = np.array(I)
+            Q = np.array(Q)
+            Imed = np.median(I,axis=0)
+            Qmed = np.median(Q,axis=0)
+
+            Z = Imed + 1j*Qmed
+            Z = Z[0:len(freqs)]
+
+            print(".", end="")
+
+            return Z
+
+        sweep_Z = np.array([
+            temp(lofreq)
+            for lofreq in flos
+        ])
+
+        f = np.array([flos*1e6 + ftone for ftone in freqs]).flatten()
+        sweep_Z_f = sweep_Z.T.flatten()
+
+        ## SAVE f and sweep_Z_f TO LOCAL FILES
+        # SHOULD BE ABLE TO SAVE TARG OR VNA
+        # WITH TIMESTAMP
+
+        return (f, sweep_Z_f)
+    
+    def vnaSweep(self, freqs, f_center=600.e6):
+        f, sweep_Z_f = self._loop_test(f_center=f_center, freqs=freqs)
+        np.save("s21.npy", np.array((f, sweep_Z_f)))
+        print(" Done.")
+

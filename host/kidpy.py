@@ -25,6 +25,7 @@ import udpcap
 import datetime
 import valon5009
 import transceiver as udx
+import matplotlib.pyplot as plt
 
 
 def testConnection(r):
@@ -399,11 +400,10 @@ class kidpy:
         vnaSweep: perform a stepped frequency sweep centered at f_center and save result as s21.npy file
         f_center: center frequency for sweep in [MHz]
         """
-        t = datetime.datetime.now(datetime.timezone.utc)
+        t = datetime.datetime.now()
         filename = "{0:%Y%m%d%H%M%S}_lo_sweep.npy".format(t)
         folder_name = "{0:%Y%m%d}".format(t)
         data_directory = "{}/{}".format(self.__saveData, folder_name)
-
         try:
             os.mkdir(data_directory)
             data_directory = data_directory + "/losweep/"
@@ -414,6 +414,16 @@ class kidpy:
         f, sweep_Z_f = do_lo_sweep(loSource, udp, f_center, freqs)
         np.save("{}/{}".format(data_directory, filename), np.array((f, sweep_Z_f)))
         print("{}/{} saved".format(data_directory, filename))
+
+        # Lets create a convenient plot as well
+        plt.figure(figsize=(18,12))
+        iqmag = np.sqrt(sweep_Z_f.real**2, sweep_Z_f.imag**2)
+        iqmag = 10 * np.log(iqmag / np.max(iqmag))
+        plt.plot(f, iqmag, "-+")
+        plt.savefig("{}/{}".format(data_directory, filename+"_iqmag.png"))
+
+
+
 
 
     def do_target_sweep(self, target_frequencies : np.ndarray):

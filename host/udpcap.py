@@ -1,18 +1,21 @@
+import multiprocessing
 import socket
-from turtle import pd
 import numpy as np
-import matplotlib.pyplot as plt
-from time import sleep
-from scipy import signal
 import h5py
 import multiprocessing as mproc
+import datetime
+import os
+import configparser
 
 DEFAULT_UDP_IP = "192.168.3.40"
 DEFAULT_UDP_PORT = 4096
 
+config = configparser.ConfigParser()
+config.read("generalConfig.conf")
+__saveData = config['DATA']['saveFolder']
+
 
 def ldcHelper(queue, filename, nPackets):
-
     """
     ldcHelper is a helper method intended to be used in the udpcap.LongDataCapture method.
     This method runs asynchronously to udpcap.LongDataCapture in order to seperate 
@@ -28,7 +31,7 @@ def ldcHelper(queue, filename, nPackets):
     """
     print("ldc helper internal function was called")
     dFile = h5py.File(filename, 'w')
-    data = dFile.create_dataset("PACKETS",(2052, nPackets), dtype=h5py.h5t.NATIVE_INT32, chunks=True,
+    data = dFile.create_dataset("PACKETS", (2052, nPackets), dtype=h5py.h5t.NATIVE_INT32, chunks=True,
                                 maxshape=(None, None))
     active = True
     while active:
@@ -44,46 +47,42 @@ def ldcHelper(queue, filename, nPackets):
 
 
 class udpcap():
-    def __init__(self, UDP_IP = DEFAULT_UDP_IP, UDP_PORT = DEFAULT_UDP_PORT):
+    def __init__(self, UDP_IP=DEFAULT_UDP_IP, UDP_PORT=DEFAULT_UDP_PORT):
         self.UDP_IP = UDP_IP
         self.UDP_PORT = UDP_PORT
         print(self.UDP_IP)
         print(self.UDP_PORT)
 
-
     def bindSocket(self):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.sock.bind((self.UDP_IP,self.UDP_PORT))
-
+        self.sock.bind((self.UDP_IP, self.UDP_PORT))
 
     def parse_packet(self):
         data = self.sock.recv(8208 * 1)
-        if len(data) <  8000:
+        if len(data) < 8000:
             print("invalid packet recieved")
             return
         datarray = bytearray(data)
-        
-        # now allow a shift of the bytes
-        spec_data = np.frombuffer(datarray, dtype = '<i')
-        # offset allows a shift in the bytes
-        return spec_data # int32 data type
 
+        # now allow a shift of the bytes
+        spec_data = np.frombuffer(datarray, dtype='<i')
+        # offset allows a shift in the bytes
+        return spec_data  # int32 data type
 
     def capture_packets(self, N_packets):
         """
         DEPRECATED
         """
-        packets = np.zeros(shape=(2052,N_packets))
-        #packets = np.zeros(shape=(2051,N_packets))
+        packets = np.zeros(shape=(2052, N_packets))
+        # packets = np.zeros(shape=(2051,N_packets))
         counter = 0
         for i in range(N_packets):
             data_2 = self.parse_packet()
-            packets[:,i] = data_2 
-            if i%488 == 0:
-                print("{}/{} captured ({:.3f}% Complete)".format(i, N_packets, 
-                    (N_packets/488)*100.0))
+            packets[:, i] = data_2
+            if i % 488 == 0:
+                print("{}/{} captured ({:.3f}% Complete)".format(i, N_packets,
+                                                                 (N_packets / 488) * 100.0))
         return packets
-
 
     def LongDataCapture(self, fname, nPackets):
         """
@@ -96,13 +95,13 @@ class udpcap():
         try:
             print("capture {} packets".format(nPackets))
             print("Begin Capture")
-            
+
             # enter while loop
-            
+
             manager = mproc.Manager()
             pool = manager.Pool(1)
             queue = manager.Queue()
-            
+
             pool.apply_async(ldcHelper, (queue, fname, nPackets))
             count = 0
             while count < nPackets:
@@ -112,14 +111,14 @@ class udpcap():
                 queue.put((packet, count))
                 count = count + 1
                 if count > 0 and count % 488 == 0:
-                    print("{}/{} captured ({:.2f}% Complete)".format(count, nPackets, ((count/nPackets)*100.0)))
+                    print("{}/{} captured ({:.2f}% Complete)".format(count, nPackets, ((count / nPackets) * 100.0)))
             # create helper process
             # capture n packets 
-                # Dispatch helper process to dump data into hdf5 dataset
+            # Dispatch helper process to dump data into hdf5 dataset
             # continue to capture n packets, never interrupting datataking
         except Exception as errorE:
-            raise(errorE)
-        
+            raise (errorE)
+
         except TypeError:
             print("Type error occured")
             return False
@@ -128,7 +127,6 @@ class udpcap():
             print("Interrupted Data Capture")
             return False
         return True
-
 
     def shortDataCapture(self, fname, nPackets):
         """
@@ -140,24 +138,88 @@ class udpcap():
             file name / path
         """
 
-        assert nPackets < 488*60, "METHOD NOT INTENDED FOR LONG DATA CAPTURES > 488 packets per second * 60 seconds"
+        assert nPackets < 488 * 60, "METHOD NOT INTENDED FOR LONG DATA CAPTURES > 488 packets per second * 60 seconds"
         pData = np.zeros((2052, nPackets))
         try:
             print("capture {} packets".format(nPackets))
             dFile = h5py.File(fname, 'w')
-            pkts = dFile.create_dataset("PACKETS",(2052, nPackets), dtype=h5py.h5t.NATIVE_INT32, chunks=True, maxshape=(None, None))
+            pkts = dFile.create_dataset("PACKETS", (2052, nPackets), dtype=h5py.h5t.NATIVE_INT32, chunks=True,
+                                        maxshape=(None, None))
             print("Begin Capture")
             for i in range(nPackets):
                 pData[:, i] = self.parse_packet()
                 if i > 0 and i % 488 == 0:
-                    print("{}/{} captured ({:.2f}% Complete)".format(i, nPackets, ((i/nPackets)*100.0)))
+                    print("{}/{} captured ({:.2f}% Complete)".format(i, nPackets, ((i / nPackets) * 100.0)))
             pkts[...] = pData
             dFile.close()
         except Exception as errorE:
-            raise(errorE)
+            raise (errorE)
         return True
 
     def release(self):
         self.sock.close()
 
+    def take_formatted_data_capture(self, filename, n_packets):
+        """"""
+        pass
 
+
+def setup_h5_datasets(h5_file: h5py.File, n_packets: int, n_tones: int):
+    """"""
+    # GROUP: observation_data
+    # SET: time
+    # SET: current LO Frequency
+    # SET: elevation
+    # SET: azimuth
+    # SET: downsampled PFB data (iqdata)
+    # GROUP: variables
+    # SET channel mask
+    # SET baseband frequencies
+    # SET tone power
+    # (optional) SET debugging info perhaps?
+    # SET sample rate
+    # SET attenuator values
+    # SET global delta azimuth
+    # SET global delta elevation
+    # SET detector delta azimuth
+    # SET detector delta elevation
+    assert n_tones > 0, "n_tones cannot be <= 0"
+    assert n_packets > 0, "n_packets cannot be <= 0"
+    grp1 = h5_file.create_group("observation_data")
+
+    ds = h5_file.create_dataset("time")
+    ds.attrs.create("units", "(UTC) YYYYMMDD-HHMMSS-PKT#")
+
+    ds = h5_file.create_dataset("lofreq")
+    ds.attrs.create("units", "MHz")
+
+    h5_file.create_dataset("elevation")
+    h5_file.create_dataset("azimuth")
+    h5_file.create_dataset("iqdata")
+
+    pass
+
+
+def enhanced_data_writer(queue: multiprocessing.queues, n_packets: int, filename: str = None):
+    # create timestamped data from location specified in general config
+    # then create an h5 file
+    timestamp = "{0:%Y%m%d%H%M%S}".format(datetime.datetime.now()) #timestamp relative to system time, not UTC
+    data_directory = "{}/{}".format(__saveData, timestamp)
+    os.mkdir(data_directory)
+    filename = "{}/kidpyCaptureData_{}.h5".format(data_directory, timestamp)
+    datafile = h5py.File(filename, 'w')
+
+    # setup data fields
+
+    active = True
+    while active:
+        payload = queue.get()
+        # print("rawdata {}".format(rawData))
+        if payload is not None:
+            # append to datasets
+            pass
+        else:
+            # we're either done or an error has occurred. Either way, time to close up.
+            active = False
+            datafile.flush()
+    datafile.close()

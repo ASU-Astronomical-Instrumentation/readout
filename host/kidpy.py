@@ -14,7 +14,7 @@ subscribe message Out[6]: {'type': 'subscribe', 'pattern': None, 'channel': b'pi
         however now we will be utilizing pub-sub to facilitate replys with data payloads.
         Write waveform for instance shall now reply back with the written baseband frequencies.
 """
-
+import numpy
 import numpy as np
 import os
 import redis
@@ -24,6 +24,7 @@ import time
 import udpcap
 import datetime
 import valon5009
+import transceiver as udx
 
 
 def testConnection(r):
@@ -104,41 +105,41 @@ def checkBlastCli(r, p):
         time.sleep(delay)
         count = count + 1
 
-
-def sweep(loSource, udp, f_center, freqs, N_steps=500):
+"""
+def do_lo_sweep(lo_synthesizer: valon5009.Synthesizer, udp_connection: udpcap.udpcap, freq_center: float,
+                freq_list: list, n_avg: int = 80, lo_step: float = 10e3):"""
+def do_lo_sweep(lo_synthesizer: udx.Transceiver, udp_connection: udpcap.udpcap, freq_center: float,
+                freq_list: list, n_avg: int = 80, lo_step: float = 10e3):
     """
-    Perform an LO Sweep using valon 5009's and save the data
-
-    loSource : valon5009.Synthesizer
-        Valon 5009 Device Object instance
-    f_center : float
-        Frequency center
-    freqs : float[]
-        List of Baseband Frequencies returned from rfsocInterface.py's writeWaveform()
-    udp : udpcap.udpcap object instance
-        udp data capture utility. This is our bread and butter for taking data from ethernet
-    N_steps : int 
-        Number of steps to sweep
+    Perform an LO Sweep using valon 5009's and save the data. Ideally, this is used only to find resonators.
 
 
     Credit: Dr. Adrian Sinclair (adriankaisinclair@gmail.com)
+    :param lo_synthesizer: synthesizer object instance we want to sweep
+    :param udp_connection: udp object instance
+    :param freq_center:
+    :param freq_list:
+    :param n_avg:
+    :param lo_step:
+    :return:
     """
-    tone_diff = np.diff(freqs)[0] / 1e6  # MHz
-    flo_step = tone_diff / N_steps
-    flo_start = f_center - tone_diff / 2.  # 256
-    flo_stop = f_center + tone_diff / 2.  # 256
+
+    tone_diff = np.diff(freq_list)[0] / 1e6  # MHz, Finds difference between tones, assuming equal spacing
+    flo_step = lo_step
+    flo_start = freq_center - tone_diff / 2.  # 256
+    flo_stop = freq_center + tone_diff / 2.  # 256
 
     flos = np.arange(flo_start, flo_stop, flo_step)
-    udp.bindSocket()
+    udp_connection.bindSocket()
 
     def temp(lofreq):
         # self.set_ValonLO function here
-        loSource.set_frequency(valon5009.SYNTH_B, lofreq)
+        # lo_synthesizer.set_frequency(valon5009.SYNTH_B, lofreq)
+        lo_synthesizer.set_synth_out(lofreq)
         # Read values and trash initial read, suspecting linear delay is cause..
-        Naccums = 5
         I, Q = [], []
-        for i in range(Naccums):
-            d = udp.parse_packet()
+        for i in range(n_avg):
+            d = udp_connection.parse_packet()
             It = d[::2]
             Qt = d[1::2]
             I.append(It)
@@ -149,7 +150,7 @@ def sweep(loSource, udp, f_center, freqs, N_steps=500):
         Qmed = np.median(Q, axis=0)
 
         Z = Imed + 1j * Qmed
-        Z = Z[0:len(freqs)]
+        Z = Z[0:len(freq_list)]
 
         print(".", end="")
 
@@ -160,22 +161,12 @@ def sweep(loSource, udp, f_center, freqs, N_steps=500):
         for lofreq in flos
     ])
 
-    f = np.array([flos * 1e6 + ftone for ftone in freqs]).flatten()
+    f = np.array([flos * 1e6 + ftone for ftone in freq_list]).flatten()
     sweep_Z_f = sweep_Z.T.flatten()
-    udp.release()
+    udp_connection.release()
 
     return f, sweep_Z_f
 
-
-def loSweep(loSource, udp, freqs=[], f_center=400):
-    """
-    vnaSweep: perform a stepped frequency sweep centered at f_center and save result as s21.npy file
-    f_center: center frequency for sweep in [MHz]
-    """
-    print(freqs)
-    f, sweep_Z_f = sweep(loSource, udp, f_center, freqs)
-    np.save("s21.npy", np.array((f, sweep_Z_f)))
-    print("s21.npy saved.")
 
 
 def menu(captions, options):
@@ -209,6 +200,14 @@ class kidpy:
         self.__valon_RF1_SYS2 = config['VALON']['rfsoc1System2']
         self.__valon_RF1_SYS1 = config['VALON']['rfsoc1System1']
 
+        # Valon rfsoc 1, system 1 valon config
+        self.__valon__rf1s1_chan1_refdoubler = int(config['VALON']["rf1s1_chan1_refdoubler"])
+        self.__valon__rf1s1_chan2_refdoubler = int(config['VALON']["rf1s1_chan2_refdoubler"])
+        self.__valon__rf1s1_chan1_pfd = float(config['VALON']["rf1s1_chan1_pfd"])
+        self.__valon__rf1s1_chan2_pfd = float(config['VALON']["rf1s1_chan2_pfd"])
+        self.__valon__rf1s1_chan1_rflevel = float(config['VALON']["rf1s1_chan1_rflevel"])
+        self.__valon__rf1s1_chan2_rflevel = float(config['VALON']["rf1s1_chan2_rflevel"])
+
         # setup redis
         self.r = redis.Redis(self.__redis_host)
         self.p = self.r.pubsub()
@@ -228,11 +227,14 @@ class kidpy:
         if not checkBlastCli(self.r, self.p):
             exit()
 
-        # Differentiate 5009's connected to the system
-        self.valon = None
-        for v in self.__ValonPorts:
-            self.valon = valon5009.Synthesizer(v.replace(' ', ''))
-            print(self.valon.getSN())
+        # Differentiate 5009's connected to the system (currently hardcoded)
+        # self.valon = None
+        # for v in self.__ValonPorts:
+        #     self.valon = valon5009.Synthesizer(v.replace(' ', ''))
+        #     print(self.valon.getSN())
+
+        self.synth = udx.Transceiver()
+        self.synth.connect("/dev/ttyACM0")
 
         self.__udp = udpcap.udpcap()
         self.current_waveform = []
@@ -245,7 +247,8 @@ class kidpy:
                             'Write stored comb from config file',
                             'I <-> Q Phase offset',
                             'Take Raw Data',
-                            'LO Sweep',
+                            'Target Sweep and plot (imported function)',
+                            'Targ Sweep/Find Resonances/Write Tones/Hires Targ Sweep(imported function)',
                             'Exit']
 
     def begin_ui(self):
@@ -318,24 +321,9 @@ class kidpy:
             if opt == 3:  # write stored comb
                 os.system("clear")
                 print("Waiting for the RFSOC to finish writing the custom frequency list: \r\n{}".format(
-                    self.customWaveform))
-                fList = []
+                    self.__customWaveform))
 
-                # separate values from config and remove ',' before converting to number and
-                # sending the list of values up to the DAC
-                for value in self.__customWaveform.split():
-                    s = value.replace(',', '')
-                    fList.append(float(s))
-
-                cmd = {"cmd": "ulWaveform", "args": [fList]}
-                cmdstr = json.dumps(cmd)
-                self.r.publish("picard", cmdstr)
-                success, self.current_waveform = wait_for_reply(self.p, "ulWaveform", max_timeout=10)
-                if success:
-                    print("Wrote Waveform")
-                    print(self.current_waveform)
-                else:
-                    print("Failed to write waveform")
+                self.write_config_file_waveform()
 
             if opt == 4:
                 print("Not Implemented")
@@ -366,18 +354,93 @@ class kidpy:
                     print("Releasing Socket")
                     self.__udp.release()
 
-            if opt == 6:  # Lo Sweep
-                # valon should be connected and differentiated as part of bringing kidpy up.
-                os.system("clear")
-                print("LO Sweep")
-                loSweep(self.valon, self.__udp, self.current_waveform, 400)
+            if opt == 6:  # Target sweep and Plot (imported from jacks code)
+                prompt = input('Write tones (recommended for first time)? (y/n) ')
+                sweep_span = float(input('Frequency Span of Target Sweep (Hz)? Default = 100.0e3:    ') or 100.e3)
+                df_step = float(input('Frequency Step of LO (Hz)? Default = 1.0e3:    ') or 1.e3)
+                zoom_factor = 1.e3 / df_step
+                save_file = input('Folder name to save sweep data: ') or 'none'
 
+                try:
+                    if prompt == "Y" or "y":
+                        # write waveform from config file here
+                        self.write_config_file_waveform()
+                    # Target Sweep
+
+                except KeyboardInterrupt:
+                    pass
+
+            if opt == 7:  # Targ Sweep/Find Resonances/Write Tones/Hires Targ Sweep (imported from jack's code)
                 pass
 
-            if opt == 7:  # get system state
+            if opt >= 8:  # Close
                 exit()
 
             return 0
+
+    def write_config_file_waveform(self):
+        fList = []
+        for value in self.__customWaveform.split():
+            s = value.replace(',', '')
+            fList.append(float(s))
+
+        cmd = {"cmd": "ulWaveform", "args": [fList]}
+        cmdstr = json.dumps(cmd)
+        self.r.publish("picard", cmdstr)
+        success, self.current_waveform = wait_for_reply(self.p, "ulWaveform", max_timeout=10)
+        if success:
+            print("Wrote Waveform")
+            print(self.current_waveform)
+        else:
+            print("Failed to write waveform")
+
+    def lo_sweep(self, loSource, udp, freqs=[], f_center=400):
+        """
+        vnaSweep: perform a stepped frequency sweep centered at f_center and save result as s21.npy file
+        f_center: center frequency for sweep in [MHz]
+        """
+        t = datetime.datetime.now(datetime.timezone.utc)
+        filename = "{0:%Y%m%d%H%M%S}_lo_sweep.npy".format(t)
+        folder_name = "{0:%Y%m%d}".format(t)
+        data_directory = "{}/{}".format(self.__saveData, folder_name)
+
+        try:
+            os.mkdir(data_directory)
+            data_directory = data_directory + "/losweep/"
+            os.mkdir(data_directory)
+        except FileExistsError:
+            pass
+
+        f, sweep_Z_f = do_lo_sweep(loSource, udp, f_center, freqs)
+        np.save("{}/{}".format(data_directory, filename), np.array((f, sweep_Z_f)))
+        print("{}/{} saved".format(data_directory, filename))
+
+
+    def do_target_sweep(self, target_frequencies : np.ndarray):
+        """
+        Shhhh.
+        :return:
+        """
+        timestamp = "{0:%Y%m%d%H%M%S}".format(datetime.datetime.now(datetime.timezone.utc))
+        data_directory = "{}/{}".format(self.__saveData, timestamp)
+        try:
+            os.mkdir(data_directory)
+        except FileExistsError:
+            pass
+
+        try:
+            data_directory = data_directory + "/target_sweep/"
+            os.mkdir(data_directory)
+        except FileExistsError:
+            pass
+
+        sweep_data_filename = "{}/sweep_data_{}.npy".format(data_directory, timestamp)
+        baseband_freq_data_filename = "{}/bbfreq_{}.npy".format(data_directory, timestamp)
+        sweep_freqs_filename = "{}/sweep_freq_{}.npy".format(data_directory, timestamp)
+        baseband_freq_data = np.array(self.__customWaveform)
+        np.save(baseband_freq_data_filename, baseband_freq_data)
+
+
 
 
 def main():

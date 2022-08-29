@@ -20,7 +20,6 @@ if getpass.getuser() != "root":
 
 import os
 from pynq import Overlay
-from pynq import Xlnk
 from pynq import MMIO
 import xrfclk
 import xrfdc
@@ -99,7 +98,7 @@ class rfsocInterface:
         ###############################
         # Ethernet Delay Lines  
         ###############################
-        eth_delay_reg.write(0x00, 37 + (4<<16))#44 + (4<<16)) # data output from eth buffer delay/ input to eth buffer delay <<16 delay
+        eth_delay_reg.write(0x00, 6 + (4<<16))#44 + (4<<16)) # data output from eth buffer delay/ input to eth buffer delay <<16 delay
         eth_delay_reg.write(0x08, 3) # start pulse out delay
         ###############################
         # Data MUX
@@ -429,6 +428,6 @@ class rfsocInterface:
         LUT_I, LUT_Q, DDS_I, DDS_Q, freqs = self.surfsUpDude(waveform, vna=vna, verbose=verbose) 
         self.load_bin_list(freqs)
         self.load_waveform_into_mem(freqs, LUT_I, LUT_Q, DDS_I, DDS_Q)
-        return freqs
+        return freqs/2
 
         

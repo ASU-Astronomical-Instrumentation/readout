@@ -356,20 +356,17 @@ class kidpy:
                     self.__udp.release()
 
             if opt == 6:  # Target sweep and Plot (imported from jacks code)
-                prompt = input('Write tones (recommended for first time)? (y/n) ')
-                sweep_span = float(input('Frequency Span of Target Sweep (Hz)? Default = 100.0e3:    ') or 100.e3)
-                df_step = float(input('Frequency Step of LO (Hz)? Default = 1.0e3:    ') or 1.e3)
-                zoom_factor = 1.e3 / df_step
-                save_file = input('Folder name to save sweep data: ') or 'none'
-
-                try:
-                    if prompt == "Y" or "y":
-                        # write waveform from config file here
-                        self.write_config_file_waveform()
-                    # Target Sweep
-
-                except KeyboardInterrupt:
-                    pass
+                # prompt = input('Write tones (recommended for first time)? (y/n) ')
+                # sweep_span = float(input('Frequency Span of Target Sweep (Hz)? Default = 100.0e3:    ') or 100.e3)
+                # df_step = float(input('Frequency Step of LO (Hz)? Default = 1.0e3:    ') or 1.e3)
+                # zoom_factor = 1.e3 / df_step
+                # save_file = input('Folder name to save sweep data: ') or 'none'
+                self.lo_sweep(self.synth, self.__udp, freqs=self.current_waveform, f_center=5100)
+                # try:
+                #     if prompt == "Y" or "y":
+                #         # write waveform from config file here
+                #         self.write_config_file_waveform()
+                #     # Target Sweep
 
             if opt == 7:  # Targ Sweep/Find Resonances/Write Tones/Hires Targ Sweep (imported from jack's code)
                 pass

@@ -115,7 +115,9 @@ class Synthesizer:
         @return: True if success (bool)
         """
         self.conn.open()
-        data = "s" + str(synth) + ";f" + str(freq) + "\r"
+        print(f"\nvalon5009.py:set_frequency->SET FREQ TO {freq}")
+        #b"s2;f400.1299999\r"
+        data = "s" + str(synth) + ";f" + "{}".format(freq) + "\r"
         self.conn.write(data.encode("ASCII"))
         self.conn.flush()
         t = time()

@@ -43,7 +43,7 @@ import logging
 __LOGFMT = "%(asctime)s|%(levelname)s|%(filename)s|%(lineno)d|%(funcName)s|%(message)s"
 
 logging.basicConfig(format=__LOGFMT, level=logging.INFO)
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(__name__+"-kidpy")
 __logh = logging.FileHandler("./kidpy.log")
 logging.root.addHandler(__logh)
 logger.log(100, __LOGFMT)
@@ -259,7 +259,7 @@ class kidpy:
             exit()
 
         # Differentiate 5009's connected to the system
-        self.valon = valon5009.Synthesizer("/dev/IF2System1LO")
+        self.valon = valon5009.Synthesizer("/dev/IF1System1LO")
         self.valon.set_frequency(valon5009.SYNTH_B, default_f_center)
         # for v in self.__ValonPorts:
         #    self.valon = valon5009.Synthesizer(v.replace(' ', ''))
@@ -444,6 +444,7 @@ class kidpy:
                             "Motor Test for Data Acquisition",
                             "Exit",
                             "Tone Powers",
+                            "LO Sweep to Calibrate Readout Power"
                         ]
                         onr_opt = menu(onr_caption, onr_options)
 
@@ -469,6 +470,7 @@ class kidpy:
 
                         if onr_opt == 1:  # Run standard calibration LO sweep
                             # see if the user wants to shift all the tones (e.g., due to change in loading)
+                            self.valon.set_frequency(2, default_f_center)
                             chan_name = 'rfsoc2'
                             tone_shift = (
                                 input(
@@ -492,12 +494,14 @@ class kidpy:
                                 print(
                                     "Waiting for the RFSOC to finish writing the updated frequency list"
                                 )
-                                write_fList(self, fList, [])
+                                fAmps = self.get_last_alist()
+                                write_fList(self, np.ndarray.tolist(fList), np.ndarray.tolist(fAmps))
+#                                write_fList(self, fList, [])
 
                             # first the low resolution initial sweep
                             os.system("clear")
                             print(
-                                "Taking initial low-resoluation sweep with df = 1 kHz and Deltaf = 100 kHz"
+                                "Taking initial sweep with df = 1 kHz and Deltaf = 100 kHz"
                             )
                             savefile = onrkidpy.get_filename(
                                 type="LO", chan_name=chan_name
@@ -536,7 +540,7 @@ class kidpy:
                                     freq_adjust = float(input("Frequency (in MHz):  "))
                                     fit_f0[adjust_index] = freq_adjust * 1.0e6
                                     keepgoing = (
-                                        input("Adjust another tone (y/n)?") or "n"
+                                        input("Adjust another tone (y/n, default is n)?") or "n"
                                     )
                             new_tone_list = (
                                 fit_f0
@@ -546,11 +550,13 @@ class kidpy:
                                 * 1.0e6
                             )
                             write_new_list = (
-                                input("Write new list of tones, yes or no (Default = no)?")
-                                or 'no'
+                                input("Write new list of tones (y/n, default is n)?")
+                                or 'n'
                             )
-                            if write_new_list == 'yes':
-                                write_fList(self, np.ndarray.tolist(new_tone_list), [])
+                            if write_new_list == 'y':
+                                fAmps = self.get_last_alist()
+                                write_fList(self, np.ndarray.tolist(new_tone_list), np.ndarray.tolist(fAmps))
+#                                write_fList(self, np.ndarray.tolist(new_tone_list), [])
                                 np.save(
                                     onrkidpy.get_filename(
                                         type="TONELIST", chan_name=chan_name
@@ -559,8 +565,8 @@ class kidpy:
                                 )
                             plt.close("all")
 
-                            second_sweep = (input('Perform a second high-resolution sweep, yes or no (Default = no)') or 'no')
-                            if second_sweep == 'yes':
+                            second_sweep = (input('Perform a second sweep centered on resonators (y/n, default = n)') or 'n')
+                            if second_sweep == 'y':
                                 savefile = onrkidpy.get_filename(
                                 type="LO", chan_name=chan_name)
                                 sweeps.loSweep(
@@ -570,7 +576,7 @@ class kidpy:
                                 valon5009.Synthesizer.get_frequency(
                                     self.valon, valon5009.SYNTH_B
                                 ),
-                                N_steps=30,
+                                N_steps=200,
                                 freq_step=0.001,
                                 savefile=savefile,)
 
@@ -658,14 +664,18 @@ class kidpy:
                                 lo_sweep_filename=data_handler.get_last_lo("rfsoc2"),
                                 lo_freq=self.valon.get_frequency(valon5009.SYNTH_B)*1e6
                             )
-                            
+#                             udp2.capture(
+#                                 [rfsoc2],
+#                                 time.sleep,
+#                                 10
+#                             )
                             udp2.capture(
                                 [rfsoc2],
                                 motor.AZ_scan_mode,
-                                0.0,
+                                0,
                                 10.0,
                                 telefile,
-                                n_repeats=1,
+                                n_repeats=3,
                                 position_return=True,
                             )
 
@@ -675,12 +685,55 @@ class kidpy:
 
                         if onr_opt == 8:  # Tone Powers
                             fList = self.get_last_flist()
-                            fAmps = np.ones(np.size(fList))
-                            #                           fAmps[0:10] = 10
-                            # pdb.set_trace()
+                            max_power_file = input('Filename with max power values? e.g., Device_aSi1_Channel2 (default is uniform power)') or ''
+                            if max_power_file != '':
+                                power_dB = np.load(onr_repo_dir + '/params/' + max_power_file + '_max_readout_power_dB.npy')
+                                fAmps = np.exp(power_dB/10.)
+                            else:
+                                fAmps = np.ones(np.size(fList))
                             write_fList(
                                 self, np.ndarray.tolist(fList), np.ndarray.tolist(fAmps)
                             )
+                            
+                        if onr_opt == 9:  # LO Sweep to calibrate readout power
+                            # see if the user wants to shift all the tones (e.g., due to change in loading)
+                            atten_out = (
+                                input(
+                                    "What is the attenuation of the IF output (in dB)?"))
+                            self.valon.set_frequency(2, default_f_center)
+                            chan_name = 'rfsoc2'
+                            lo_freq = valon5009.Synthesizer.get_frequency(
+                                self.valon, valon5009.SYNTH_B)
+
+                            # first the low resolution initial sweep
+                            os.system("clear")
+                            print(
+                                "Taking initial sweep with df = 1 kHz and Deltaf = 100 kHz"
+                            )
+                            savefile = onrkidpy.get_filename(
+                                type="LO", chan_name=chan_name
+                            )
+                            sweeps.loSweep(
+                                self.valon,
+                                self.__udp,
+                                self.get_last_flist(),
+                                valon5009.Synthesizer.get_frequency(
+                                    self.valon, valon5009.SYNTH_B
+                                ),
+                                N_steps=200,
+                                freq_step=0.001,
+                                savefile=savefile,
+                            )
+
+                            # then fit the resonances from that sweep
+                            fit_f0, fit_qi, fit_qc = fit_lo.main(
+                                self.get_tone_list(),
+                                savefile + ".npy",
+                                quickPlot=False,
+                                printFlag=False,
+                            )
+                            np.save(onrkidpy.get_filename(type='attenuator',attenuation=atten_out), fit_f0)
+
                         if onr_opt == 10:
                             sweeps.plot_sweep_hdf(data_handler.get_last_rdf("rfsoc2"))
 

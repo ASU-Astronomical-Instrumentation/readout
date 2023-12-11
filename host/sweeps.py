@@ -41,18 +41,20 @@ def sweep(loSource: valon5009.Synthesizer, udp, f_center, freqs, N_steps=500, fr
     flo_start = f_center - flo_step * N_steps / 2.0  # 256
     flo_stop = f_center + flo_step * N_steps / 2.0  # 256
 
-    flos = np.arange(flo_start, flo_stop, flo_step)
+    flos = np.arange(flo_start, flo_stop, flo_step) #+1e-6
+    # flos = np.round(flos * 1e3)*1e-3
     log.info(f"len flos {flos.shape}")
     udp.bindSocket()
     actual_los = []
     def temp(lofreq):
         # self.set_ValonLO function here
-        loSource.set_frequency(valon5009.SYNTH_B, lofreq+0.000001)
-        # actual_los.append(loSource.get_frequency(valon5009.SYNTH_B))
+ 
+        # print(lofreq)
+        loSource.set_frequency(valon5009.SYNTH_B, lofreq)
         # Read values and trash initial read, suspecting linear delay is cause..
-        Naccums = 50
+        Naccums = 100
         I, Q = [], []
-        for i in range(10):  # toss 10 packets in the garbage
+        for i in range(20):  # toss 10 packets in the garbage
             udp.parse_packet()
 
         for i in range(Naccums):

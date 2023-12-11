@@ -21,7 +21,6 @@ import logging
 import numpy as np
 import socket
 
-from data_handler import getdtime
 from data_handler import RFChannel
 from data_handler import RawDataFile
 from data_handler import get_last_lo

@@ -11,3 +11,4 @@ host/params
 OLD
 venv
 .ipynb_checkpoints
+*.code-workspace

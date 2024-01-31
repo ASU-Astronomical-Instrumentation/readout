@@ -8,3 +8,6 @@ kidpylib.loga
 onr/
 *.log
 host/params
+OLD
+venv
+.ipynb_checkpoints

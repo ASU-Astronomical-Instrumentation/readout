@@ -1,13 +1,5 @@
-.idea
-/playground/logging_test.py
-/playground/app.log
-/app.log
-__pycache__
-kidpylib/__pycache__
-kidpylib.loga
-onr/
+.venv/*
+.vscode/*
+docs/_*
 *.log
-host/params
-OLD
-venv
-.ipynb_checkpoints
+__pycache__/

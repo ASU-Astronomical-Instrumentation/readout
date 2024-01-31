@@ -37,7 +37,7 @@ import os
 import logging
 import numpy as np
 from datetime import date
-from rfsoc import rfchannel
+from .rfsoc import rfchannel
 import glob
 
 logger = logging.getLogger(__name__)
@@ -403,6 +403,7 @@ def gen_read(h5: str):
     This method worked because the hdf5 dataset name is identical the same as the variable name.
 
     .. code::
+    
         /time_ordered_data/adc_i --> self.fh.adc_i
         /global_data/somevar --> self.fh.somevar
 
@@ -498,13 +499,6 @@ def get_last_rdf(name: str):
     """
     Modified function to get the latest RawDataFile
     following.
-
-    .. code::
-
-        "/data/{yymmdd}/{yymmdd}_{name}_TOD_set*.hd5"
-        example.
-        /data/20230731/20230731_rfsoc1_TOD_set1001.hd5
-        /data/20230731/20230731_rfsoc1_TOD_set1002.hd5
 
     """
     # see if we already have the parent folder for today's date

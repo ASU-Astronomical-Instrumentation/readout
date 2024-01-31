@@ -12,7 +12,7 @@ Unlike udpcap, udp2 utilizes the hdf5 obervation file format defined by data_han
     Certain typs of variables such as h5py objects or sockets can't be pickled. We therefore have to create the h5py/socket objects we need post-pickle. 
 
 :Authors: Cody Roberson
-:Date: 2023-08-02
+:Date: 2024-02-20
 :Version: 2.0.1
 
 """
@@ -21,9 +21,9 @@ import logging
 import numpy as np
 import socket
 
-from data_handler import RFChannel
-from data_handler import RawDataFile
-from data_handler import get_last_lo
+from .rfsoc import RFSOC, rfchannel
+from .data_handler import RawDataFile
+from .data_handler import get_last_lo
 import socket
 import time
 import multiprocessing as mp
@@ -33,7 +33,7 @@ NC='\033[0m' # No Color
 
 logger = logging.getLogger(__name__)
 
-def __data_writer_process(dataqueue, chan: RFChannel, runFlag):
+def __data_writer_process(dataqueue, chan: rfchannel, runFlag):
     """
     Creates a RawDataFile and populates it with data that is passed to it through
     the dataqueue parameter. This function runs indefinitely until
@@ -88,7 +88,7 @@ def __data_writer_process(dataqueue, chan: RFChannel, runFlag):
     log.debug(f"Queue closed, closing file and exiting for <{chan.name}>")
     #log.warning("Keyboard Interrupt Caught. This terminates processes that may be writing to a file. Expect possible hdf5 data corruption")
 
-def __data_collector_process(dataqueue, chan: RFChannel, runFlag):
+def __data_collector_process(dataqueue, chan: rfchannel, runFlag):
     """
     Creates a socket connection and collects udp data. Said data is put in a tuple and
     passed to it's partner data writer process through the queue. When collection ends, None is possed into the
@@ -263,33 +263,13 @@ def capture(channels: list, fn=None, *args, **kwargs):
         return
     log.info("Capture finished")
 
+# This is a test function to iterate through the RFSOC objects and print out their UUIDs and channel names
+from typing import List
+def libcapture(RFSOCS: List[RFSOC], fn=None, *args, **kwargs):
+    print("This is a test")
+    for r in RFSOCS:
+        print(r.name)
+
 
 if __name__ == "__main__":
-    """
-    Test routine. Used insitu of a connected RFSOC. For testing, several terminals were opened
-    and each of them would run udp_sender in order to simulate incomming data.
-    ..code:: bash
-        python udp_sender 4096
-    """
-    __LOGFMT = (
-        "%(asctime)s|%(levelname)s|%(filename)s|%(lineno)d|%(funcName)s|%(message)s"
-    )
-    logging.basicConfig(format=__LOGFMT, level=logging.DEBUG)
-    __logh = logging.FileHandler("./udp2.log")
-    logging.root.addHandler(__logh)
-    logger.log(100, __LOGFMT)
-    __logh.flush()
-    __logh.setFormatter(logging.Formatter(__LOGFMT))
-
-    log = logger.getChild(__name__ + ".__main__ test block")
-    # # lets test this thing, shall we?
-    # rfsoc = data_handler.RFChannel(
-    #     "./rfsoc1_fakedata.h5", "127.0.0.1", 4096, "Stuffed Crust Pizza", 488, 1024, 1
-    # )
-    # rfsoc2 = data_handler.RFChannel(
-    #     "./rfsoc2_fakedata.h5", "127.0.0.1", 4097, "Salad", 488, 1024, 1
-    # )
-    # start = time.perf_counter_ns()
-    # capture([rfsoc, rfsoc2], time.sleep, 10)  # wait 10 seconds
-    # stop = time.perf_counter_ns()
-    # log.info(f"capture runtime --> {(stop-start) * 1e-6} ms")
+    pass

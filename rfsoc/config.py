@@ -30,6 +30,7 @@ class ConfigData:
     """
 
     rfsocName: str = "NameGoesHere"
+    crash_on_noconnection: bool = "False"
     redis_host: str = "192.168.2.10"
     redis_port: str = "6379"
     dstmac_msb: str = "803f"

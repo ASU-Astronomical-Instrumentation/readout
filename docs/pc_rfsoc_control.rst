@@ -16,3 +16,38 @@ communicate with the host computer. This document details the redis messages tha
 Command Message Format
 -----------------------
 
+**Commands to the rfsoc are passed from host to redis to rfsoc**
+
+
+.. code-block:: json
+
+   {
+         "command": "command_name",
+         "data": {
+              "arg1": "value1",
+              "arg2": "value2",
+              "argN" : "valueN"
+         }
+   }
+
+
+**Replies from the rfsoc are passed from rfsoc to redis to host following this format**
+
+
+.. code-block:: json
+
+   {
+        "status": "OK or ERROR",
+        "error" : "Error information if status is ERROR",
+        "data": {
+            "arg1": "value1",
+            "arg2": "value2",
+            "argN" : "valueN"
+         }
+   }
+
+
+Under the Hood
+--------------
+
+In python, the built-in Dicts are passed to and from the json library using the json.dumps() and json.loads() functions.

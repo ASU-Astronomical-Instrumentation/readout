@@ -20,13 +20,6 @@ kidpy3.kp3Exceptions module
    :undoc-members:
    :show-inheritance:
 
-kidpy3.onr\_ifslice module
---------------------------
-
-.. automodule:: kidpy3.onr_ifslice
-   :members:
-   :undoc-members:
-   :show-inheritance:
 
 kidpy3.rfsoc module
 -------------------
@@ -36,6 +29,7 @@ kidpy3.rfsoc module
    :undoc-members:
    :show-inheritance:
 
+
 kidpy3.udp2 module
 ------------------
 
@@ -44,21 +38,6 @@ kidpy3.udp2 module
    :undoc-members:
    :show-inheritance:
 
-kidpy3.udp\_sender module
--------------------------
-
-.. automodule:: kidpy3.udp_sender
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-kidpy3.valon module
--------------------
-
-.. automodule:: kidpy3.valon
-   :members:
-   :undoc-members:
-   :show-inheritance:
 
 Module contents
 ---------------

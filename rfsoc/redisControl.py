@@ -39,16 +39,38 @@ from time import sleep
 import config
 
 
-def config_hardware(data: str):
+def config_hardware(data: dict):
+    srcip = ""
+    dstip = ""
+    mac = ""
+    try:
+        srcip = data["srcip"]
+        dstip = data["dstip"]
+        mac = data["mac"]
+    
+    except KeyError:
+        log.error("config_hardware: missing required parameters")
+        return
+
+def upload_bitstream(data: dict):
+    try:
+        bitstream = data["bitstream"]
+    except KeyError:
+        log.error("upload_bitstream: missing required parameters")
+        return
+
+def set_tone_list(data: dict):
     pass
 
-
-def upload_bitstream(data: str):
+def get_tone_list(data: dict):
     pass
 
-
-def set_tone_list(data: str):
+def set_amplitude_list(data: dict):
     pass
+
+def get_amplitude_list(data: dict):
+    pass
+
 
 
 def load_config() -> config.GeneralConfig:
@@ -61,10 +83,11 @@ def load_config() -> config.GeneralConfig:
 def main():
     conf = load_config()
     conf.cfg.rfsocName = "rfsoc1"
+    crash_on_noconnection = False
     connection = RedisConnection(conf.cfg.redis_host, port=conf.cfg.redis_port)
 
     #loop forever until connection comes up?
-    
+
 
     while 1:
         msg = connection.grab_command_msg()
@@ -72,9 +95,14 @@ def main():
             command = json.loads(msg["data"])
             if command["command"] in COMMAND_DICT:
                 function = COMMAND_DICT[command["command"]]
-                function(command["data"])
+                args = {}
+                try:
+                    args = json.loads(command["data"])
+                except json.JSONDecodeError:
+                    log.error(f"Could not decode JSON from command: {command['command']}")
+                function(args)
             else:
-                log.error(f"Unknown command: {command['command']}")
+                log.warning(f"Unknown command: {command['command']}")
 
 
 class RedisConnection:
@@ -119,6 +147,9 @@ COMMAND_DICT = {
     "config_hardware": config_hardware,
     "upload_bitstream": upload_bitstream,
     "set_tone_list": set_tone_list,
+    "get_tone_list": get_tone_list,
+    "set_amplitude_list": set_amplitude_list,
+    "get_amplitude_list": get_amplitude_list,
 }
 
 if __name__ == "__main__":

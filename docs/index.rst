@@ -7,13 +7,26 @@
 MKID Readout Library 
 =====================
 
+Background
+-----------
+The ZCU111 RFSoC is a system on a chip featuring an FPGA and an Arm Cortex-A53 Quad-Core processor with built in ADC's and DAC's.
+The OS is a variant of Ubuntu which allows for the use of python and other conventional software tools.
+There is also an AMD (Xilinx) provided framework called PYNQ which allows users to interact with the RFSoC FPGA using Jupyter Notebooks.
+
+This library is seperated into two parts:
+
+   1. The kidpy3 folder which contains the host (flight computer) side code.
+
+   2. The rfsoc folder which contains the command listener and executor code for the RFSoC.
+
+
+
 .. toctree::
    :maxdepth: 3
    :caption: Documentation:
 
    getting_started
    pc_rfsoc_control
-   building_the_firmware
 
 
 .. toctree::

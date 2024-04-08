@@ -1,16 +1,16 @@
-==================================
-Controlling the RFSOC using Redis
-==================================
+=========================================
+Info on Controlling the RFSOC using Redis
+=========================================
 
-Background
------------
 
-The ZCU111 RFSoC utilizes the AMD (Xilinx) provided framework called PYNQ
-to control the RFSoC. PYNQ is a Python-based framework that allows users to control the
-RFSoC including the FPGA firmware using Python. This library provides a way to control
-the RFSoC using Redis, a popular in-memory data structure store, which can be used as a
-database, cache, and message broker. Software written in Python and running on the RFSoC utilizes redis to 
-communicate with the host computer. This document details the redis messages that this library utilizes on the backend.
+Under the Hood
+--------------
+
+A command is initiated in kidpy3 through the RFSOC class. This command and it's arguments are packaged as a DICT object and then converted into
+a json object and sent to the redis server using its pub-sub functionality. Any RFSOC's listening to the redis server (and channel)
+will receive the command. If the command is valid and the arguments are correct, the RFSOC will execute the command and reply.
+``redisControl.py`` contains a dictionary of all the commands that can be executed by the RFSoC and the corresponding function that should be called. 
+If the ``command_name`` doesn't match the dictionary, the RFSoC will reply with an error message.
 
 
 Command Message Format
@@ -47,7 +47,150 @@ Command Message Format
    }
 
 
-Under the Hood
---------------
 
-In python, the built-in Dicts are passed to and from the json library using the json.dumps() and json.loads() functions.
+Command Reference
+-----------------
+
+.. list-table:: config_hardware
+   :widths: 20 20 70
+   :header-rows: 1
+   
+   * - Arguments
+     - Type
+     - Description
+
+   * - tbd
+     - tbd
+     - tbd
+
+   * - tbd
+     - tbd
+     - tbd
+
+.. list-table:: upload_bitstream
+   :widths: 20 20 70
+   :header-rows: 1
+
+   * - Arguments
+     - Type
+     - Description
+
+   * - tbd
+     - tbd
+     - tbd
+
+   * - tbd
+     - tbd
+     - tbd
+
+.. list-table:: set_tone_list
+   :widths: 20 20 70
+   :header-rows: 1
+
+   * - Arguments
+     - Type
+     - Description
+
+   * - tbd
+     - tbd
+     - tbd
+
+   * - tbd
+     - tbd
+     - tbd
+
+.. list-table:: get_tone_list
+   :widths: 20 20 70
+   :header-rows: 1
+
+   * - Arguments
+     - Type
+     - Description
+
+   * - tbd
+     - tbd
+     - tbd
+
+   * - tbd
+     - tbd
+     - tbd
+
+.. list-table:: set_amplitude_list
+   :widths: 20 20 70
+   :header-rows: 1
+
+   * - Arguments
+     - Type
+     - Description
+
+   * - tbd
+     - tbd
+     - tbd
+
+   * - tbd
+     - tbd
+     - tbd
+
+.. list-table:: get_amplitude_list
+   :widths: 20 20 70
+   :header-rows: 1
+
+   * - Arguments
+     - Type
+     - Description
+
+   * - tbd
+     - tbd
+     - tbd
+
+   * - tbd
+     - tbd
+     - tbd
+
+.. list-table:: blank_cmd_here
+   :widths: 20 20 70
+   :header-rows: 1
+
+   * - Arguments
+     - Type
+     - Description
+
+   * - tbd
+     - tbd
+     - tbd
+
+   * - tbd
+     - tbd
+     - tbd
+
+
+Example Command String
+^^^^^^^^^^^^^^^^^^^^^^
+
+**package command**
+
+.. code-block:: python
+
+      def some_function()
+         cmddict = { 
+         "command": "config_hardware", 
+         "args": { 
+            "srcip" : "192.168.2.10", 
+            "dstip" : "192.168.40.51"}
+         }
+         cmdstr = json.dumps(cmddict)
+         return cmdstr
+
+
+
+**resulting string**
+
+::
+   
+   '{"command": "config_hardware", "args": {"srcip": "192.168.2.10", "dstip": "192.168.40.51"}}'
+
+This will appear in the redis server as a string like this (some characters are escaped with the \\ character):
+
+::
+
+   "{\"command\": \"config_hardware\", \"args\": {\"srcip\": \"192.168.2.10\", \"dstip\": \"192.168.40.51\"}}"

@@ -27,7 +27,7 @@ def uploadOverlay(overlayPath: str):
 
     firmware = Overlay(overlayPath, ignore_version=True)
 
-def configure_registers(self):
+def configure_registers(self, srcip, dstip, mac):
     # SET ETHERNET IPS and MACS
     def ethRegsPortWrite(
         eth_regs,
@@ -176,7 +176,7 @@ def load_ddr4( chan, wave_real, wave_imag, dphi):
     ddr4mux = firmware.axi_ddr4_mux
     ddr4mux.write(8, 0)  # set read valid
     ddr4mux.write(0, 0)  # mux switch
-    ddr4 = firmware.ddr4_0
+
     base_addr_ddr4 = 0x4_0000_0000  # 0x5_0000_0000
     depth_ddr4 = 2**32
     mmio_ddr4 = MMIO(base_addr_ddr4, depth_ddr4)

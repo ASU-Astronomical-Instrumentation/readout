@@ -39,6 +39,8 @@ from time import sleep
 import config
 
 
+import rfsocInterfaceDual as ri
+
 def config_hardware(data: dict):
     srcip = ""
     dstip = ""
@@ -47,7 +49,7 @@ def config_hardware(data: dict):
         srcip = data["srcip"]
         dstip = data["dstip"]
         mac = data["mac"]
-    
+        ri.configure_registers(srcip, dstip, mac)
     except KeyError:
         log.error("config_hardware: missing required parameters")
         return
@@ -87,19 +89,23 @@ def main():
     connection = RedisConnection(conf.cfg.redis_host, port=conf.cfg.redis_port)
 
     #loop forever until connection comes up?
-
-
     while 1:
         msg = connection.grab_command_msg()
-        if msg[type] == "message":
-            command = json.loads(msg["data"])
+        if msg['type'] == "message":
+            try:
+                command = json.loads(msg["data"].decode())
+            except json.JSONDecodeError:
+                log.error(f"Could not decode JSON from command: {command['command']}")
+                break
+            
             if command["command"] in COMMAND_DICT:
                 function = COMMAND_DICT[command["command"]]
                 args = {}
                 try:
-                    args = json.loads(command["data"])
-                except json.JSONDecodeError:
-                    log.error(f"Could not decode JSON from command: {command['command']}")
+                    args = command["data"] 
+                except KeyError:
+                    log.warning(f"No data provided for command: {command['command']}")
+                    break
                 function(args)
             else:
                 log.warning(f"Unknown command: {command['command']}")
@@ -140,7 +146,8 @@ class RedisConnection:
         :rtype: str
         """
         if self.is_connected():
-            return self.pubsub.get_message(timeout=None)
+            self.pubsub.get_message(timeout=None)
+            return 
 
 
 COMMAND_DICT = {

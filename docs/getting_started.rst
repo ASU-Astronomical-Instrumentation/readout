@@ -2,11 +2,11 @@
 Getting Started
 ================
 
+
 Requirements
 ------------
 
-1. Python 3.8.18
-
+1. `Python 3.8.18 <https://www.python.org/downloads/release/python-3818/>`_
 2. Ubuntu 18.04.6 LTS or later
 
     .. WARNING::
@@ -57,7 +57,7 @@ For users with Ubuntu 18.04.6 LTS
 
       make -j
 
-      sudo make install
+      sudo make altinstall
 
 3. Close the current shell and launch a fresh one. Check the python version::
 
@@ -65,19 +65,21 @@ For users with Ubuntu 18.04.6 LTS
 
 4. Create a virtual environment to work from. In the event you have to run different python codes
    with different versions of python, you can create a virtual environment for each version of python
-   you have installed. This will allow you to run different versions of python on the same machine
+   you have installed. You can (and should) also do this on a per-project basis. This will allow you to run different versions of python on the same machine
    without any conflicts. While somewhat inconvenient, it will save you countless hours in the long run::
 
-      python3.8 -m venv ~/venv3.8.18
+      python3.8 -m venv ~/venv3.8
    
-   Activate the environment with ``source ~/venv3.8.18/bin/activate``
+   Activate the environment with ``source ~/venv3.8/bin/activate``
 
    .. TIP::
-      You can add the command ``source ~/venv3.8.18/bin/activate`` to your ``.bashrc`` file
+      You can add the command ``source ~/venv3.8/bin/activate`` to your ``.bashrc`` file
       to automatically activate the environment when you open a new shell.
 
       The virtual environment can be placed anywhere and be named almost anything.
-   
+
+      ``echo "source ~/venv3.8/bin/activate" >> ~/.bashrc``
+      
 
 For users with Ubuntu 20.04 LTS or later
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -89,9 +91,9 @@ For users with Ubuntu 20.04 LTS or later
 
 2. Create a virtual environment to work from and activate it as mentioned above::
 
-      python3.8 -m venv ~/venv3.8.18
+      python3.8 -m venv ~/venv3.8
 
-      source ~/venv3.8.18/bin/activate
+      source ~/venv3.8/bin/activate
 
 
 Setup the Library 

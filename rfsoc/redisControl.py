@@ -1,6 +1,6 @@
 """
 @author: Cody Roberson
-@date: Feb 2024
+@date: Apr 2024
 @file: redisControl.py
 @description:
     This file is the main control loop for the rfsoc. It listens for commands from the redis server and executes them.
@@ -38,40 +38,82 @@ import json
 from time import sleep
 import config
 
-
 import rfsocInterfaceDual as ri
 
+last_tonelist_chan1 = []
+last_tonelist_chan2 = []
+
+def create_response(status, error, data):
+    pass
+
 def config_hardware(data: dict):
-    srcip = ""
-    dstip = ""
-    mac = ""
     try:
-        srcip = data["srcip"]
-        dstip = data["dstip"]
-        mac = data["mac"]
-        ri.configure_registers(srcip, dstip, mac)
+        srcip = data["dataA_srcip"]
+        dstip = data["dataB_srcip"]
+        macmsb = data["destmac_MSB"]
+        maclsb = data["destmac_LSB"]
+        macmsb = int(macmsb, 32)
+        maclsb = int(maclsb, 16)
+        ri.configure_registers(srcip, dstip, macmsb, maclsb)
     except KeyError:
-        log.error("config_hardware: missing required parameters")
-        return
+        err = "missing required parameters"
+        log.error(err)
+        return (False, err, "")
+    except ValueError:
+        err = "invalid parameter data type"
+        log.error(err)
+        return (False, err, "")
+    else:
+        return (True, "", "")
 
 def upload_bitstream(data: dict):
     try:
         bitstream = data["bitstream"]
+        ri.uploadOverlay(bitstream)
     except KeyError:
-        log.error("upload_bitstream: missing required parameters")
-        return
+        err = "missing required parameters"
+        log.error(err)
+        return (False, err, "")
+    return (True, "", "")
 
 def set_tone_list(data: dict):
-    pass
+    try:
+        strtonelist = data["tone_list"]
+        chan = int(data["channel"])
+        tonelist = np.array(strtonelist)
+        x, phi, freqactual = ri.generate_wave_ddr4(tonelist)
+        ri.load_bin_list(chan, freqactual)
+        wave_r, wave_i = ri.norm_wave(x)
+        ri.load_ddr4(chan, wave_r, wave_i, phi)
+        ri.reset_accum_and_sync(chan, freqactual)
+    except KeyError: # tone_list does not exist
+        err = "missing required parameters"
+        log.error(err)
+        return (False, err, "")
+    except ValueError:
+        err = "invalid parameter data type"
+        log.error(err)
+        return (False, err)
+    return (True, "", "")
 
 def get_tone_list(data: dict):
-    pass
-
-def set_amplitude_list(data: dict):
-    pass
-
-def get_amplitude_list(data: dict):
-    pass
+    global last_tonelist
+    try:
+        chan = int(data["channel"])
+        if chan == 1:
+            return (True, "", last_tonelist_chan1)
+        elif chan == 2:
+            return (True, "", last_tonelist_chan2)
+        else:
+            return (False, "Bad channel number", "")
+    except KeyError:
+        err = "missing required parameters"
+        log.error(err)
+        return (False, err, "")
+    except ValueError:
+        err = "invalid parameter data type"
+        log.error(err)
+        return (False, err, "")
 
 
 
@@ -96,7 +138,7 @@ def main():
                 command = json.loads(msg["data"].decode())
             except json.JSONDecodeError:
                 log.error(f"Could not decode JSON from command: {command['command']}")
-                break
+                continue
             
             if command["command"] in COMMAND_DICT:
                 function = COMMAND_DICT[command["command"]]
@@ -105,7 +147,7 @@ def main():
                     args = command["data"] 
                 except KeyError:
                     log.warning(f"No data provided for command: {command['command']}")
-                    break
+                    continue
                 function(args)
             else:
                 log.warning(f"Unknown command: {command['command']}")
@@ -155,8 +197,6 @@ COMMAND_DICT = {
     "upload_bitstream": upload_bitstream,
     "set_tone_list": set_tone_list,
     "get_tone_list": get_tone_list,
-    "set_amplitude_list": set_amplitude_list,
-    "get_amplitude_list": get_amplitude_list,
 }
 
 if __name__ == "__main__":

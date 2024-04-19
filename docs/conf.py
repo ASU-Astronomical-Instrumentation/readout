@@ -9,7 +9,7 @@
 project = 'mKID Readout Library'
 copyright = '2024, Arizona State University'
 author = 'Cody Roberson'
-release = '1'
+release = '0'
 import os,sys
 sys.path.insert(0, os.path.abspath('../'))
 # -- General configuration ---------------------------------------------------

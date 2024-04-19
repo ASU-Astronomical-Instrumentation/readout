@@ -15,7 +15,8 @@ import xrfclk
 from time import sleep
 import numpy as np
 
-firmware = Overlay("last_horizon_20231205-1117.bit", ignore_version=True)
+
+firmware = pynq.Overlay
 
 
 def uploadOverlay(overlayPath: str):
@@ -24,10 +25,14 @@ def uploadOverlay(overlayPath: str):
     :param overlayPath: Path to the overlay to upload
     :type overlayPath: str
     """
+    if overlayPath is None:
+        firmware = Overlay("last_horizon_20231205-1117.bit", ignore_version=True)
+    else:
+        firmware = Overlay(overlayPath, ignore_version=True)
+    firmware = firmware
 
-    firmware = Overlay(overlayPath, ignore_version=True)
 
-def configure_registers(self, srcip, dstip, mac):
+def configure_registers(self, dataA_srcip: str, dataB_srcip: str, dstmacMSB:int, dstmacLSB: int):
     # SET ETHERNET IPS and MACS
     def ethRegsPortWrite(
         eth_regs,
@@ -45,11 +50,22 @@ def configure_registers(self, srcip, dstip, mac):
         eth_regs.write(0x10, dst_ip_int32)
 
     ethRegsPortWrite(
-        firmware.ethWrapPort0.eth_regs_0, src_ip_int32=int("c0a80330", 16)
+        firmware.ethWrapPort0.eth_regs_0, src_ip_int32=dataA_srcip,
+        dst_mac1_int32=dstmacMSB, dst_mac0_int16=dstmacLSB
     )  # OPSERO PORT 3, CHAN 1
     ethRegsPortWrite(
-        firmware.ethWrapPort1.eth_regs_0, src_ip_int32=int("c0a80331", 16)
+        firmware.ethWrapPort1.eth_regs_0, src_ip_int32=dataB_srcip,
+        dst_mac1_int32=dstmacMSB, dst_mac0_int16=dstmacLSB
     )  # OPSERO PORT 2, CHAN 2
+
+def norm_wave(wave, max_amp=2**15 - 1) -> np.ndarray:
+    norm = np.max(np.abs(wave))
+    if norm == 0:
+        return wave_real, wave_imag
+    wave_real = ((wave.real / norm) * max_amp).astype("int16")
+    wave_imag = ((wave.imag / norm) * max_amp).astype("int16")
+    return wave_real, wave_imag
+
 
 def generate_wave_ddr4(freq_list):
     fs = 512e6
@@ -72,13 +88,7 @@ def generate_wave_ddr4(freq_list):
         dphi = z
     return x, dphi, freq_actual
 
-def norm_wave(wave, max_amp=2**15 - 1):
-    norm = np.max(np.abs(wave))
-    if norm == 0:
-        return wave.real, wave.imag
-    wave_real = ((wave.real / norm) * max_amp).astype("int16")
-    wave_imag = ((wave.imag / norm) * max_amp).astype("int16")
-    return wave_real, wave_imag
+
 
 def load_bin_list(chan, freq_list):
     fs = 512e6

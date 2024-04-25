@@ -32,7 +32,9 @@ def uploadOverlay(overlayPath: str):
     firmware = firmware
 
 
-def configure_registers(self, dataA_srcip: str, dataB_srcip: str, dstmacMSB:int, dstmacLSB: int):
+def configure_registers(
+    self, dataA_srcip: str, dataB_srcip: str, dstmacMSB: int, dstmacLSB: int
+):
     # SET ETHERNET IPS and MACS
     def ethRegsPortWrite(
         eth_regs,
@@ -50,13 +52,18 @@ def configure_registers(self, dataA_srcip: str, dataB_srcip: str, dstmacMSB:int,
         eth_regs.write(0x10, dst_ip_int32)
 
     ethRegsPortWrite(
-        firmware.ethWrapPort0.eth_regs_0, src_ip_int32=dataA_srcip,
-        dst_mac1_int32=dstmacMSB, dst_mac0_int16=dstmacLSB
+        firmware.ethWrapPort0.eth_regs_0,
+        src_ip_int32=dataA_srcip,
+        dst_mac1_int32=dstmacMSB,
+        dst_mac0_int16=dstmacLSB,
     )  # OPSERO PORT 3, CHAN 1
     ethRegsPortWrite(
-        firmware.ethWrapPort1.eth_regs_0, src_ip_int32=dataB_srcip,
-        dst_mac1_int32=dstmacMSB, dst_mac0_int16=dstmacLSB
+        firmware.ethWrapPort1.eth_regs_0,
+        src_ip_int32=dataB_srcip,
+        dst_mac1_int32=dstmacMSB,
+        dst_mac0_int16=dstmacLSB,
     )  # OPSERO PORT 2, CHAN 2
+
 
 def norm_wave(wave, max_amp=2**15 - 1) -> np.ndarray:
     norm = np.max(np.abs(wave))
@@ -87,7 +94,6 @@ def generate_wave_ddr4(freq_list):
         z[0] = dphi0
         dphi = z
     return x, dphi, freq_actual
-
 
 
 def load_bin_list(chan, freq_list):
@@ -122,7 +128,8 @@ def load_bin_list(chan, freq_list):
             dsp_regs.write(0x00, ((addr << 1) + 1) << 12)
             dsp_regs.write(0x00, 0)
 
-def reset_accum_and_sync( chan, freqs):
+
+def reset_accum_and_sync(chan, freqs):
     if chan == 1:
         dsp_regs = firmware.chan1.dsp_regs_0
         dsp_regs.write(0x0C, 181)
@@ -146,7 +153,8 @@ def reset_accum_and_sync( chan, freqs):
     sleep(0.5)
     dsp_regs.write(0x08, accum_length | accum_rst | sync_in)
 
-def load_ddr4( chan, wave_real, wave_imag, dphi):
+
+def load_ddr4(chan, wave_real, wave_imag, dphi):
     if chan == 1:
         base_addr_dphis = 0xA004C000
     elif chan == 2:
@@ -156,9 +164,7 @@ def load_ddr4( chan, wave_real, wave_imag, dphi):
 
     # write dphi to bram
     dphi_16b = dphi.astype("uint16")
-    dphi_stacked = ((np.uint32(dphi_16b[1::2]) << 16) + dphi_16b[0::2]).astype(
-        "uint32"
-    )
+    dphi_stacked = ((np.uint32(dphi_16b[1::2]) << 16) + dphi_16b[0::2]).astype("uint32")
     mem_size = 512 * 4  # 32 bit address slots
     mmio_bram_phis = MMIO(base_addr_dphis, mem_size)
     mmio_bram_phis.array[0:512] = dphi_stacked[

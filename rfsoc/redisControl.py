@@ -22,11 +22,11 @@ logh.setFormatter(logging.Formatter(__LOGFMT))
 
 
 # rfsocInterface uses the 'PYNQ' library which requires root priviliges+
-# FIXME uncomment when done testing
-# import getpass
-# if getpass.getuser() != "root":
-#     print("rfsocInterface.py: root priviliges are required, please run as root.")
-#     exit()
+import getpass
+
+if getpass.getuser() != "root":
+    print("rfsocInterface.py: root priviliges are required, please run as root.")
+    exit()
 
 
 import redis
@@ -43,10 +43,40 @@ import rfsocInterfaceDual as ri
 last_tonelist_chan1 = []
 last_tonelist_chan2 = []
 
-def create_response(status, error, data):
-    pass
 
-def config_hardware(data: dict):
+def create_response(
+    status: bool,
+    uuid: str,
+    data: dict = {},
+    error: str = "",
+):
+    rdict = {
+        "status": "OK" if status else "ERROR",
+        "uuid": uuid,
+        "error": error,
+        "data": data,
+    }
+    response = json.dumps(rdict)
+    return response
+
+
+#################### Command Functions ###########################
+def upload_bitstream(uuid, data: dict):
+    status = False
+    err = ""
+    try:
+        bitstream = data["bitstream"]
+        ri.uploadOverlay(bitstream)
+        status = True
+    except KeyError:
+        err = "missing required parameters"
+        log.error(err)
+    return create_response(status, uuid, error=err)
+
+
+def config_hardware(uuid, data: dict):
+    status = False
+    err = ""
     try:
         srcip = data["dataA_srcip"]
         dstip = data["dataB_srcip"]
@@ -55,28 +85,19 @@ def config_hardware(data: dict):
         macmsb = int(macmsb, 32)
         maclsb = int(maclsb, 16)
         ri.configure_registers(srcip, dstip, macmsb, maclsb)
+        status = True
     except KeyError:
         err = "missing required parameters"
         log.error(err)
-        return (False, err, "")
     except ValueError:
         err = "invalid parameter data type"
         log.error(err)
-        return (False, err, "")
-    else:
-        return (True, "", "")
+    return create_response(status, uuid, error=err)
 
-def upload_bitstream(data: dict):
-    try:
-        bitstream = data["bitstream"]
-        ri.uploadOverlay(bitstream)
-    except KeyError:
-        err = "missing required parameters"
-        log.error(err)
-        return (False, err, "")
-    return (True, "", "")
 
-def set_tone_list(data: dict):
+def set_tone_list(uuid, data: dict):
+    status = False,
+    err = ""
     try:
         strtonelist = data["tone_list"]
         chan = int(data["channel"])
@@ -86,37 +107,43 @@ def set_tone_list(data: dict):
         wave_r, wave_i = ri.norm_wave(x)
         ri.load_ddr4(chan, wave_r, wave_i, phi)
         ri.reset_accum_and_sync(chan, freqactual)
-    except KeyError: # tone_list does not exist
+        status = True
+    except KeyError:  # tone_list does not exist
         err = "missing required parameters"
         log.error(err)
-        return (False, err, "")
     except ValueError:
         err = "invalid parameter data type"
         log.error(err)
-        return (False, err)
-    return (True, "", "")
+    return create_response(status, uuid, error=err)
 
-def get_tone_list(data: dict):
+
+def get_tone_list(uuid, data: dict):
     global last_tonelist
+    status = False,
+    err = ""
+    data = {}
     try:
         chan = int(data["channel"])
+        data['channel'] = chan
         if chan == 1:
-            return (True, "", last_tonelist_chan1)
+            data['tone_list'] = last_tonelist_chan1
+            status = True
         elif chan == 2:
-            return (True, "", last_tonelist_chan2)
+            data['tone_list'] = last_tonelist_chan2
+            status = True
         else:
-            return (False, "Bad channel number", "")
+            err = "bad channel number"
+            status = False
     except KeyError:
         err = "missing required parameters"
         log.error(err)
-        return (False, err, "")
     except ValueError:
         err = "invalid parameter data type"
         log.error(err)
-        return (False, err, "")
 
+    return create_response(status, uuid, error=err, data = data)
 
-
+############ end of command functions #############
 def load_config() -> config.GeneralConfig:
     """Grab config from a file or make it if it doesn't exist."""
     c = config.GeneralConfig("rfsoc_config.cfg")
@@ -130,25 +157,32 @@ def main():
     crash_on_noconnection = False
     connection = RedisConnection(conf.cfg.redis_host, port=conf.cfg.redis_port)
 
-    #loop forever until connection comes up?
+    # loop forever until connection comes up?
     while 1:
         msg = connection.grab_command_msg()
-        if msg['type'] == "message":
+        if msg["type"] == "message":
             try:
                 command = json.loads(msg["data"].decode())
             except json.JSONDecodeError:
                 log.error(f"Could not decode JSON from command: {command['command']}")
                 continue
-            
+            except KeyError:
+                log.error(f"no data field in command message")
+                continue
+
             if command["command"] in COMMAND_DICT:
                 function = COMMAND_DICT[command["command"]]
                 args = {}
+                uuid = "no uuid"
                 try:
-                    args = command["data"] 
+                    args = command["data"]
+                    uuid = command['uuid']
                 except KeyError:
                     log.warning(f"No data provided for command: {command['command']}")
+                    # Should this actually reply with an error message
                     continue
-                function(args)
+                response_str = function(uuid, args)
+                connection.sendmsg(response_str)
             else:
                 log.warning(f"Unknown command: {command['command']}")
 
@@ -189,7 +223,12 @@ class RedisConnection:
         """
         if self.is_connected():
             self.pubsub.get_message(timeout=None)
-            return 
+            return
+
+    def sendmsg(self, response):
+        if self.is_connected():
+            self.r.publish("resonse", response)
+            return
 
 
 COMMAND_DICT = {

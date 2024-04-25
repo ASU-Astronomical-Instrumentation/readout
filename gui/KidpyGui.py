@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import ttk
 import os
 
+
 class kidpy3_GUI(tk.Tk):
     def __init__(self):
         super().__init__()
@@ -19,7 +20,7 @@ class kidpy3_GUI(tk.Tk):
         section3_tab = ttk.Frame(self.notebook)
         section4_tab = ttk.Frame(self.notebook)
         section5_tab = ttk.Frame(self.notebook)
-        
+
         # Add tabs to the notebook
         self.notebook.add(config, text="CONFIG")
         self.notebook.add(waveform_tab, text="PLACEHOLDER 2")

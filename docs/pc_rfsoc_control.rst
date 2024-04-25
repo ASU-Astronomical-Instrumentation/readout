@@ -23,6 +23,7 @@ Command Message Format
 
    {
          "command": "command_name",
+         "uuid" : "",
          "data": {
               "arg1": "value1",
               "arg2": "value2",
@@ -38,6 +39,7 @@ Command Message Format
 
    {
         "status": "OK or ERROR",
+        "uuid" : "",
         "error" : "Error information if status is ERROR",
         "data": {
             "arg1": "value1",

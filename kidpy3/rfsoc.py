@@ -23,12 +23,11 @@ class RFSOC:
         self._ch1 = rfchannel()
         self._ch2 = rfchannel()
         self._connection = RedisConnection()
-        
 
-    def config_hardware(self, srcip, dstip, srcmac, dstmac, accumlen=(2**19)-1):
+    def config_hardware(self, srcip, dstip, srcmac, dstmac, accumlen=(2**19) - 1):
         """The RFSoC has several hardware configurations that need to be set before it can be used. This function sets those configurations.
 
-        :param srcip: IP address the RFSoC will use to send data 
+        :param srcip: IP address the RFSoC will use to send data
         :type srcip: str
         :param dstip: IP address the host computer will use to receive data from the RFSoC.
         :type dstip: str
@@ -42,8 +41,7 @@ class RFSOC:
         pass
 
     def upload_bitstream(self):
-        """Command the RFSoC to upload(or reupload) it's FPGA Firmware
-        """
+        """Command the RFSoC to upload(or reupload) it's FPGA Firmware"""
         pass
 
     def set_tone_list(self, chan=1, tonelist=[], amplitudes=[]):

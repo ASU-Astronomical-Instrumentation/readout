@@ -18,6 +18,7 @@ from .udp2 import libcapture
 
 # Set up logging
 import logging
+
 __LOGFMT = "%(asctime)s|%(levelname)s|%(filename)s|%(lineno)d|%(funcName)s| %(message)s"
 logging.basicConfig(format=__LOGFMT, level=logging.DEBUG)
 logger = logging.getLogger(__name__)

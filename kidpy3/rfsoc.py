@@ -5,9 +5,31 @@ import redis
 
 log = logging.getLogger(__name__)
 
+"""
+Note to self, there should only be one common redis connection between different instances of rfsoc and therefore
+rfsoc should NOT initialize the variable and instead be made module intrinsic..........
+"""
+
 HOST = "localhost"
 
 __all__ = ["RFSOC", "rfchannel", "RedisConnection"]
+
+rserv = RedisConnection(HOST)
+
+
+def _create_cmdstr(command:str, args:dict):
+    cmddict = {
+            "command" : "",
+            "uuid" : str(uuid.uuid4()),
+            "data" : args,
+            }
+
+    cmdstr = ""
+    try:
+        cmdstr = json.dumps(cmddict)
+    except Exception as e:
+        log.error("create cmd str exception has occured")
+        raise # want this to kill the program for now..... should return None on error in future
 
 class RFSOC:
     def __init__(self, ip, rfsoc_name) -> None:
@@ -22,9 +44,14 @@ class RFSOC:
         self.name = rfsoc_name
         self._ch1 = rfchannel()
         self._ch2 = rfchannel()
-        self._connection = RedisConnection()
 
-    def config_hardware(self, srcip, dstip, srcmac, dstmac, accumlen=(2**19) - 1):
+
+    def upload_bitstream(self):
+        """Command the RFSoC to upload(or reupload) it's FPGA Firmware"""
+   
+        pass
+
+    def config_hardware(self, srcip, dstip, dstmac):
         """The RFSoC has several hardware configurations that need to be set before it can be used. This function sets those configurations.
 
         :param srcip: IP address the RFSoC will use to send data
@@ -35,14 +62,20 @@ class RFSOC:
         :type srcmac: str
         :param dstmac: MAC address of the host computer network interface
         :type dstmac: str
-        :param accumlen: _description_, defaults to (2**19) - 1 (488 packets/second)
-        :type accumlen: _type_, optional
         """
-        pass
+        if len(dstmac) != 12:
+            log.warning("bad mac address, expected 12 characters")
+            return
+        data = {}
+        data['data_a_srcip'] = ''
+        data['data_b_srcip'] = ''
+        data['destmac_msb'] = ''
+        data['destmac_lsb'] = ''
 
-    def upload_bitstream(self):
-        """Command the RFSoC to upload(or reupload) it's FPGA Firmware"""
-        pass
+
+
+
+
 
     def set_tone_list(self, chan=1, tonelist=[], amplitudes=[]):
         """Set a DAC channel to generate a signal from a list of tones
@@ -50,7 +83,9 @@ class RFSOC:
         :param chan: The DAC channel on the RFSoC to set, defaults to 1
         :type chan: int, optional
         :param tonelist: list of tones in MHz to generate, defaults to []
-        :type tonelist: list, optional
+        :type tonelist: list, optional    def upload_bitstream(self):
+        """Command the RFSoC to upload(or reupload) it's FPGA Firmware"""
+        pass
         :param amplitudes: list of tone powers per tone, Normalized to 1, defaults to []
         :type amplitudes: list, optional
         """
@@ -110,7 +145,9 @@ class rfchannel:
         self.baseband_freqs = np.empty(2)  # empty ndarray
         self.tone_powers = np.empty(2)
         self.attenuator_settings = (0.0, 0.0)
-        self.n_tones = 0
+        self.n_tones = 0    def upload_bitstream(self):
+        """Command the RFSoC to upload(or reupload) it's FPGA Firmware"""
+        pass
 
         self.port = 4096
         self.name = ""
@@ -163,7 +200,7 @@ class RedisConnection:
         :param timeout: _description_
         :type timeout: _type_
         """
-        uid = uuid4()
+
         log.debug(f"Issuing command {command} with timeout {timeout}; uid: {uid}")
 
         if self.is_connected():

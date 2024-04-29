@@ -4,7 +4,7 @@
 @file: redisControl.py
 @description:
     This file is the main control loop for the rfsoc. It listens for commands from the redis server and executes them.
-    I use a dictionary to map commands to functions. Apparently, this is called a "dispatch table".
+    A dictionary is used to map commands to functions in order to create a dispatch table".
     I just want to go back to C and use a switch statement :c.
 
 
@@ -78,10 +78,10 @@ def config_hardware(uuid, data: dict):
     status = False
     err = ""
     try:
-        srcip = data["dataA_srcip"]
-        dstip = data["dataB_srcip"]
-        macmsb = data["destmac_MSB"]
-        maclsb = data["destmac_LSB"]
+        srcip = data["data_a_srcip"]
+        dstip = data["data_b_srcip"]
+        macmsb = data["destmac_msb"]
+        maclsb = data["destmac_lsb"]
         macmsb = int(macmsb, 32)
         maclsb = int(maclsb, 16)
         ri.configure_registers(srcip, dstip, macmsb, maclsb)

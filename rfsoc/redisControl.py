@@ -65,7 +65,7 @@ def upload_bitstream(uuid, data: dict):
     status = False
     err = ""
     try:
-        bitstream = data["bitstream"]
+        bitstream = data["abs_bitstream_path"]
         ri.uploadOverlay(bitstream)
         status = True
     except KeyError:
@@ -227,7 +227,7 @@ class RedisConnection:
 
     def sendmsg(self, response):
         if self.is_connected():
-            self.r.publish("resonse", response)
+            self.r.publish("REPLY", response)
             return
 
 

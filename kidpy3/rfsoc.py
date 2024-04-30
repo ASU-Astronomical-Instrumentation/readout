@@ -18,20 +18,13 @@ rserv = RedisConnection(HOST)
 
 
 def _create_cmdstr(command:str, args:dict):
-    cmddict = {
-            "command" : "",
-            "uuid" : str(uuid.uuid4()),
-            "data" : args,
-            }
+    
+    return cmddict
 
-    cmdstr = ""
-    try:
-        cmdstr = json.dumps(cmddict)
-    except Exception as e:
-        log.error("create cmd str exception has occured")
-        raise # want this to kill the program for now..... should return None on error in future
 
 class RFSOC:
+    rcon = RedisConnection(HOST)
+    
     def __init__(self, ip, rfsoc_name) -> None:
         """Bread and butter of the RFSOC object. This is the main object that facilitates control over the readout system.
 
@@ -46,11 +39,14 @@ class RFSOC:
         self._ch2 = rfchannel()
 
 
-    def upload_bitstream(self):
+    def upload_bitstream(self, path: str):
         """Command the RFSoC to upload(or reupload) it's FPGA Firmware"""
-   
-        pass
+        assert isinstance(path, str) == True, "Path should be a string"
+        args = {
+                "abs_bitstream_path" : path
+                }
 
+   
     def config_hardware(self, srcip, dstip, dstmac):
         """The RFSoC has several hardware configurations that need to be set before it can be used. This function sets those configurations.
 
@@ -170,6 +166,7 @@ class RedisConnection:
         if self.is_connected():
             self.pubsub = self.r.pubsub()
             self.pubsub.subscribe("REPLY")
+            log.debug(self.pubsub.get_message())
 
     def is_connected(self):
         """Check if the RFSOC is connected to the redis server
@@ -191,7 +188,7 @@ class RedisConnection:
         finally:
             return is_connected
 
-    def issue_command(self, command, timeout):
+    def issue_command(self, rfsocname, command, timeout):
         """Issues a command via redis to the RFSoC and waits for a response or timeout.
         Returns an error if a timeout occurs.
 
@@ -200,18 +197,54 @@ class RedisConnection:
         :param timeout: _description_
         :type timeout: _type_
         """
+       
+        if not self.is_connected():
+            log.error("NOT CONNECTED TO REDIS SERVER")
+            return
 
-        log.debug(f"Issuing command {command} with timeout {timeout}; uid: {uid}")
+        uuid = str(uuid.uuid4())
+        cmddict = {
+            "command" : command,
+            "uuid" : uuid, 
+            "data" : args,
+            }  
 
-        if self.is_connected():
-            self.r.publish("rfsoc", command)
-            # TODO: ensure the message type and pubsub channel is correct
-            response = self.pubsub.get_message(timeout=timeout)
-            if response:
-                log.debug(f"Received response: {response}")
-                return response
+        log.debug(f"Issuing command payload {cmddict} with timeout {timeout}; uuid: {uuid}")
+        self.r.publish("rfsoc", cmddict) 
+        response = self.pubsub.get_message(timeout=timeout) 
+        if response is None:
+            log.warning("received no response from RFSOC within specified timeout period")
+            return None
+        # see command reference format in docs
+        try:
+            if response['type'] == "message":
+                body = response['data']
+                body = json.loads(body.decode())
+                status = body['status']
+                error = body['error']
+                reply_uuid = body['uuid']
+                data = body['data']
+                if reply_uuid != uuid:
+                    log.warning(f"reply UUID did not match message uuid as expected\nreplyuuid={reply_uuid}, uuid={uuid}")
+                    return None
+                if status == "OK":
+                    log.info("Command Success")
+                    return data
+                else:
+                    log.error(f"rfsoc {rfsocname} reported an error:\n{error}")
+                    return None
             else:
-                log.error(
-                    f"Timeout waiting for response to command {command}, uid: {uid}"
-                )
-                return None
+                log.error(f"incorrect message type received\n{response}")
+                
+        except KeyError:
+            err = "missing data from reply message"
+            log.error(err)
+            return
+
+        except json.JSONDecodeError:
+            err = "json failed to decode the body of the reply message"
+            log.error(err)
+            return
+        
+
+

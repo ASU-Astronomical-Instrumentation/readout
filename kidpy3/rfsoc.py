@@ -2,24 +2,99 @@ import numpy as np
 import logging
 from uuid import uuid4
 import redis
-
-log = logging.getLogger(__name__)
-
-"""
-Note to self, there should only be one common redis connection between different instances of rfsoc and therefore
-rfsoc should NOT initialize the variable and instead be made module intrinsic..........
-"""
+import json
 
 HOST = "localhost"
 
-__all__ = ["RFSOC", "rfchannel", "RedisConnection"]
+log = logging.getLogger(__name__)
 
-rserv = RedisConnection(HOST)
+class RedisConnection:
+    def __init__(self) -> None:
+        self.r = redis.Redis(host=HOST, port=6379)
 
+        if self.is_connected():
+            self.pubsub = self.r.pubsub()
+            self.pubsub.subscribe("REPLY")
+            log.debug(self.pubsub.get_message())
 
-def _create_cmdstr(command:str, args:dict):
-    
-    return cmddict
+    def is_connected(self):
+        """Check if the RFSOC is connected to the redis server
+
+        :return: true if connected, false if not
+        :rtype: bool
+        """
+        is_connected = False
+        try:
+            self.r.ping()  # Doesn't just return t/f, it throws an exception if it can't connect
+            is_connected = True
+            log.debug(f"Redis Connection Status: {is_connected}")
+        except redis.ConnectionError:
+            is_connected = False
+            log.error("Redis Connection Error")
+        except redis.TimeoutError:
+            is_connected = False
+            log.error("Redis Connection Timeout")
+        finally:
+            return is_connected
+
+    def issue_command(self, rfsocname, command, args, timeout):
+        """Issues a command via redis to the RFSoC and waits for a response or timeout.
+        Returns an error if a timeout occurs.
+
+        :param command: _description_
+        :type command: _type_
+        :param timeout: _description_
+        :type timeout: _type_
+        """
+       
+        if not self.is_connected():
+            log.error("NOT CONNECTED TO REDIS SERVER")
+            return
+
+        uuid = str(uuid.uuid4())
+        cmddict = {
+            "command" : command,
+            "uuid" : uuid, 
+            "data" : args,
+            }  
+
+        log.debug(f"Issuing command payload {cmddict} with timeout {timeout}; uuid: {uuid}")
+        self.r.publish("rfsoc", cmddict) 
+        response = self.pubsub.get_message(timeout=timeout) 
+        if response is None:
+            log.warning("received no response from RFSOC within specified timeout period")
+            return None
+        # see command reference format in docs
+        try:
+            if response['type'] == "message":
+                body = response['data']
+                body = json.loads(body.decode())
+                status = body['status']
+                error = body['error']
+                reply_uuid = body['uuid']
+                data = body['data']
+                if reply_uuid != uuid:
+                    log.warning(f"reply UUID did not match message uuid as expected\nreplyuuid={reply_uuid}, uuid={uuid}")
+                    return None
+                if status == "OK":
+                    log.info("Command Success")
+                    return data
+                else:
+                    log.error(f"rfsoc {rfsocname} reported an error:\n{error}")
+                    return None
+            else:
+                log.error(f"incorrect message type received\n{response}")
+                
+        except KeyError:
+            err = "missing data from reply message"
+            log.error(err)
+            return
+
+        except json.JSONDecodeError:
+            err = "json failed to decode the body of the reply message"
+            log.error(err)
+            return
+        
 
 
 class RFSOC:
@@ -45,9 +120,16 @@ class RFSOC:
         args = {
                 "abs_bitstream_path" : path
                 }
+        response = self.rcon.issue_command(self.name, "upload_bitstream", args, 10)
+        if response is None:
+            log.error("upload_bitstream failed")
+            return
+        log.info("upload_bitstream success")
+        return
+
 
    
-    def config_hardware(self, srcip, dstip, dstmac):
+    def config_hardware(self, data_a_srcip, data_b_srcip, dstmac):
         """The RFSoC has several hardware configurations that need to be set before it can be used. This function sets those configurations.
 
         :param srcip: IP address the RFSoC will use to send data
@@ -63,13 +145,17 @@ class RFSOC:
             log.warning("bad mac address, expected 12 characters")
             return
         data = {}
-        data['data_a_srcip'] = ''
-        data['data_b_srcip'] = ''
-        data['destmac_msb'] = ''
-        data['destmac_lsb'] = ''
+        data['data_a_srcip'] = data_a_srcip
+        data['data_b_srcip'] = data_b_srcip
+        data['destmac_msb'] = dstmac[:8]
+        data['destmac_lsb'] =  dstmac[8:]
 
-
-
+        response = self.rcon.issue_command(self.name, "config_hardware", data, 10)
+        if response is None:
+            log.error("config_hardware failed")
+            return
+        log.info("config_hardware success")
+        return
 
 
 
@@ -80,7 +166,7 @@ class RFSOC:
         :type chan: int, optional
         :param tonelist: list of tones in MHz to generate, defaults to []
         :type tonelist: list, optional    def upload_bitstream(self):
-        """Command the RFSoC to upload(or reupload) it's FPGA Firmware"""
+        Command the RFSoC to upload(or reupload) it's FPGA Firmware
         pass
         :param amplitudes: list of tone powers per tone, Normalized to 1, defaults to []
         :type amplitudes: list, optional
@@ -141,9 +227,7 @@ class rfchannel:
         self.baseband_freqs = np.empty(2)  # empty ndarray
         self.tone_powers = np.empty(2)
         self.attenuator_settings = (0.0, 0.0)
-        self.n_tones = 0    def upload_bitstream(self):
-        """Command the RFSoC to upload(or reupload) it's FPGA Firmware"""
-        pass
+        self.n_tones = 0    
 
         self.port = 4096
         self.name = ""
@@ -157,94 +241,3 @@ class rfchannel:
         self.lo_sweep_filename = ""
         self.n_fftbins = 1024
         self.lo_freq = 400.0
-
-
-class RedisConnection:
-    def __init__(self) -> None:
-        self.r = redis.Redis(host=HOST, port=6379)
-
-        if self.is_connected():
-            self.pubsub = self.r.pubsub()
-            self.pubsub.subscribe("REPLY")
-            log.debug(self.pubsub.get_message())
-
-    def is_connected(self):
-        """Check if the RFSOC is connected to the redis server
-
-        :return: true if connected, false if not
-        :rtype: bool
-        """
-        is_connected = False
-        try:
-            self.r.ping()  # Doesn't just return t/f, it throws an exception if it can't connect
-            is_connected = True
-            log.debug(f"Redis Connection Status: {is_connected}")
-        except redis.ConnectionError:
-            is_connected = False
-            log.error("Redis Connection Error")
-        except redis.TimeoutError:
-            is_connected = False
-            log.error("Redis Connection Timeout")
-        finally:
-            return is_connected
-
-    def issue_command(self, rfsocname, command, timeout):
-        """Issues a command via redis to the RFSoC and waits for a response or timeout.
-        Returns an error if a timeout occurs.
-
-        :param command: _description_
-        :type command: _type_
-        :param timeout: _description_
-        :type timeout: _type_
-        """
-       
-        if not self.is_connected():
-            log.error("NOT CONNECTED TO REDIS SERVER")
-            return
-
-        uuid = str(uuid.uuid4())
-        cmddict = {
-            "command" : command,
-            "uuid" : uuid, 
-            "data" : args,
-            }  
-
-        log.debug(f"Issuing command payload {cmddict} with timeout {timeout}; uuid: {uuid}")
-        self.r.publish("rfsoc", cmddict) 
-        response = self.pubsub.get_message(timeout=timeout) 
-        if response is None:
-            log.warning("received no response from RFSOC within specified timeout period")
-            return None
-        # see command reference format in docs
-        try:
-            if response['type'] == "message":
-                body = response['data']
-                body = json.loads(body.decode())
-                status = body['status']
-                error = body['error']
-                reply_uuid = body['uuid']
-                data = body['data']
-                if reply_uuid != uuid:
-                    log.warning(f"reply UUID did not match message uuid as expected\nreplyuuid={reply_uuid}, uuid={uuid}")
-                    return None
-                if status == "OK":
-                    log.info("Command Success")
-                    return data
-                else:
-                    log.error(f"rfsoc {rfsocname} reported an error:\n{error}")
-                    return None
-            else:
-                log.error(f"incorrect message type received\n{response}")
-                
-        except KeyError:
-            err = "missing data from reply message"
-            log.error(err)
-            return
-
-        except json.JSONDecodeError:
-            err = "json failed to decode the body of the reply message"
-            log.error(err)
-            return
-        
-
-

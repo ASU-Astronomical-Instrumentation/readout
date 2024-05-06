@@ -74,7 +74,7 @@ def norm_wave(wave, max_amp=2**15 - 1) -> np.ndarray:
     return wave_real, wave_imag
 
 
-def generate_wave_ddr4(freq_list):
+def generate_wave_ddr4(freq_list, amp_list):
     fs = 512e6
     lut_len = 2**20
     fft_len = 1024
@@ -82,7 +82,7 @@ def generate_wave_ddr4(freq_list):
     freq_actual = k * (fs / lut_len)
     X = np.zeros(lut_len, dtype="complex")
     phi = np.random.uniform(-np.pi, np.pi, np.size(freq_list))
-    X[k] = np.exp(-1j * phi)
+    X[k] = np.exp(-1j * phi) * amp_list
     x = np.fft.ifft(X) * lut_len / np.sqrt(2)
     bin_num = np.int64(np.round(freq_actual / (fs / fft_len)))
     f_beat = (bin_num) * fs / fft_len - (freq_actual)

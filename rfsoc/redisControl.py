@@ -101,9 +101,9 @@ def set_tone_list(uuid, data: dict):
     try:
         strtonelist = data["tone_list"]
         chan = int(data["channel"])
-        amplutudes = data["amplitudes"]
+        amplitudes = data["amplitudes"]
         tonelist = np.array(strtonelist)
-        x, phi, freqactual = ri.generate_wave_ddr4(tonelist)
+        x, phi, freqactual = ri.generate_wave_ddr4(tonelist, amplitudes)
         ri.load_bin_list(chan, freqactual)
         wave_r, wave_i = ri.norm_wave(x)
         ri.load_ddr4(chan, wave_r, wave_i, phi)
@@ -134,6 +134,7 @@ def get_tone_list(uuid, data: dict):
             status = True
         else:
             err = "bad channel number"
+            log.error(err)
             status = False
     except KeyError:
         err = "missing required parameters"

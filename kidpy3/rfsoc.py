@@ -198,6 +198,7 @@ class RFSOC:
             self._ch2.n_tones = len(f)
         else:
             log.error(f"Invalid channel number {chan}")
+            return
 
         response = RFSOC.rcon.issue_command(self.name, "set_tone_list", data, 10)
         if response is None:

@@ -101,6 +101,7 @@ def set_tone_list(uuid, data: dict):
     try:
         strtonelist = data["tone_list"]
         chan = int(data["channel"])
+        amplutudes = data["amplitudes"]
         tonelist = np.array(strtonelist)
         x, phi, freqactual = ri.generate_wave_ddr4(tonelist)
         ri.load_bin_list(chan, freqactual)

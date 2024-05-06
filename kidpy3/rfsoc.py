@@ -120,7 +120,7 @@ class RFSOC:
         args = {
                 "abs_bitstream_path" : path
                 }
-        response = self.rcon.issue_command(self.name, "upload_bitstream", args, 10)
+        response = RFSOC.rcon.issue_command(self.name, "upload_bitstream", args, 10)
         if response is None:
             log.error("upload_bitstream failed")
             return
@@ -150,7 +150,7 @@ class RFSOC:
         data['destmac_msb'] = dstmac[:8]
         data['destmac_lsb'] =  dstmac[8:]
 
-        response = self.rcon.issue_command(self.name, "config_hardware", data, 10)
+        response = RFSOC.rcon.issue_command(self.name, "config_hardware", data, 10)
         if response is None:
             log.error("config_hardware failed")
             return
@@ -171,28 +171,43 @@ class RFSOC:
         :param amplitudes: list of tone powers per tone, Normalized to 1, defaults to []
         :type amplitudes: list, optional
         """
-        uuid = uuid4()
+
+        f = tonelist
+        a = amplitudes
+        data = {}
+        # Convert numpy arrays to list as needed
+        if isinstance(tonelist, np.ndarray):
+            f = tonelist.tolist()
+        if isinstance(amplitudes, np.ndarray):
+            a = amplitudes.tolist()
+
+
+        data['tone_list'] = f
+        data['channel'] = chan
+        data['amplitudes'] = a
+
+        
         if chan == 1:
-            self._ch1.baseband_freqs = tonelist
-            self._ch1.tone_powers = amplitudes
-            self._ch1.n_tones = len(tonelist)
+            self._ch1.baseband_freqs = f
+            self._ch1.tone_powers = a
+            self._ch1.n_tones = len(f)
 
         elif chan == 2:
-            self._ch2.baseband_freqs = tonelist
-            self._ch2.tone_powers = amplitudes
+            self._ch2.baseband_freqs = f
+            self._ch2.tone_powers = a
+            self._ch2.n_tones = len(f)
         else:
             log.error(f"Invalid channel number {chan}")
 
+        response = RFSOC.rcon.issue_command(self.name, "set_tone_list", data, 10)
+        if response is None:
+            log.error("set_tone_list failed")
+            return
+
+    def get_tone_list(self, chan=1):
         pass
 
-    def set_alist(self, chan, alist):
-        pass
 
-    def get_tone_list(self, chan=None):
-        pass
-
-    def get_last_alist(self, chan):
-        pass
 
 
 class rfchannel:

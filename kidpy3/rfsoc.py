@@ -5,12 +5,23 @@ import redis
 import json
 
 HOST = "localhost"
-
+PORT = 6379
 log = logging.getLogger(__name__)
 
 class RedisConnection:
+    """Class representing a connection to a Redis server.
+
+    This class provides methods to check if the RFSoC is connected to the Redis server,
+    issue commands via Redis to the RFSoC, and handle the responses.
+
+    Attributes:
+        r (redis.Redis): The Redis client instance.
+        pubsub (redis.client.PubSub): The Redis pubsub instance.
+
+    """
+
     def __init__(self) -> None:
-        self.r = redis.Redis(host=HOST, port=6379)
+        self.r = redis.Redis(host=HOST, port=PORT)
 
         if self.is_connected():
             self.pubsub = self.r.pubsub()
@@ -39,12 +50,14 @@ class RedisConnection:
 
     def issue_command(self, rfsocname, command, args, timeout):
         """Issues a command via redis to the RFSoC and waits for a response or timeout.
-        Returns an error if a timeout occurs.
-
-        :param command: _description_
-        :type command: _type_
-        :param timeout: _description_
-        :type timeout: _type_
+                
+        Args:
+            rfsocname (str): The name of the RFSoC.
+            command (str): The command to be issued.
+            args (dict): The arguments for the command.
+            timeout (int): The timeout period in seconds.
+        Returns:
+            The response data if the command is successful, None otherwise.
         """
        
         if not self.is_connected():
@@ -98,7 +111,7 @@ class RedisConnection:
 
 
 class RFSOC:
-    rcon = RedisConnection(HOST)
+    rcon = RedisConnection()
     
     def __init__(self, ip, rfsoc_name) -> None:
         """Bread and butter of the RFSOC object. This is the main object that facilitates control over the readout system.
@@ -165,9 +178,7 @@ class RFSOC:
         :param chan: The DAC channel on the RFSoC to set, defaults to 1
         :type chan: int, optional
         :param tonelist: list of tones in MHz to generate, defaults to []
-        :type tonelist: list, optional    def upload_bitstream(self):
-        Command the RFSoC to upload(or reupload) it's FPGA Firmware
-        pass
+        :type tonelist: list, optional  
         :param amplitudes: list of tone powers per tone, Normalized to 1, defaults to []
         :type amplitudes: list, optional
         """
@@ -205,8 +216,37 @@ class RFSOC:
             log.error("set_tone_list failed")
             return
 
-    def get_tone_list(self, chan=1):
-        pass
+    def get_tone_list(self, chan: int = 1):
+        """
+        Retrieves the tone list and amplitudes for the specified channel.
+        Note that this function does update the internal state of the rfchannel object. This is to ensure that the 
+        tones and amplitudes are in sync with the HDF5 data files.
+
+        Args:
+            chan (int): The channel number. Defaults to 1.
+
+        Returns:
+            tuple: A tuple containing the baseband frequencies and tone powers.
+
+
+        """
+        data = {"channel": chan}
+        response = RFSOC.rcon.issue_command(self.name, "get_tone_list", data, 10)
+        if response is None:
+            log.error("get_tone_list failed")
+        else:
+            if chan == 1:
+                self._ch1.baseband_freqs = response['tone_list']
+                self._ch1.tone_powers = response['amplitudes']
+                self._ch1.n_tones = len(response['tone_list'])
+            else:
+                self._ch2.baseband_freqs = response['tone_list']
+                self._ch2.tone_powers = response['amplitudes']
+                self._ch2.n_tones = len(response['tone_list'])
+
+            log.info(f"get_tone_list success for channel {chan}")
+            return self._ch1.baseband_freqs, self._ch1.tone_powers
+
 
 
 

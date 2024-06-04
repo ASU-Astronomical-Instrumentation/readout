@@ -17,7 +17,6 @@ from pynq import Overlay
 from pynq import Xlnk
 from pynq import MMIO
 import xrfclk
-import xrfdc
 from time import sleep
 import numpy as np
 

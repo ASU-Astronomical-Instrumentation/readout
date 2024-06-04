@@ -41,7 +41,9 @@ import config
 import rfsocInterfaceDual as ri
 
 last_tonelist_chan1 = []
+last_amplitudes_chan1 = []
 last_tonelist_chan2 = []
+last_amplitudes_chan2 = []
 
 
 def create_response(
@@ -102,6 +104,12 @@ def set_tone_list(uuid, data: dict):
         strtonelist = data["tone_list"]
         chan = int(data["channel"])
         amplitudes = data["amplitudes"]
+        if chan == 1:
+            last_tonelist_chan1 = strtonelist
+            last_amplitudes_chan1 = amplitudes
+        elif chan == 2:
+            last_tonelist_chan2 = strtonelist
+            last_amplitudes_chan2 = amplitudes
         tonelist = np.array(strtonelist)
         x, phi, freqactual = ri.generate_wave_ddr4(tonelist, amplitudes)
         ri.load_bin_list(chan, freqactual)
@@ -110,7 +118,7 @@ def set_tone_list(uuid, data: dict):
         ri.reset_accum_and_sync(chan, freqactual)
         status = True
     except KeyError:  # tone_list does not exist
-        err = "missing required parameters"
+        err = "missing required parameters, double check that tone list and amplitude list are present"
         log.error(err)
     except ValueError:
         err = "invalid parameter data type"
@@ -128,9 +136,11 @@ def get_tone_list(uuid, data: dict):
         data['channel'] = chan
         if chan == 1:
             data['tone_list'] = last_tonelist_chan1
+            data['amplitudes'] = last_amplitudes_chan1
             status = True
         elif chan == 2:
             data['tone_list'] = last_tonelist_chan2
+            data['amplitudes'] = last_amplitudes_chan2
             status = True
         else:
             err = "bad channel number"

@@ -114,9 +114,6 @@ def load_bin_list(chan, freq_list):
         dsp_regs = firmware.chan2.dsp_regs_0
     else:
         return "Does not compute"
-    sync_in = 2**26
-    accum_rst = 2**24  # (active low)
-    accum_length = (2**19) - 1
     for addr in range(1024):
         if addr < (np.size(bin_list)):
             # print("addr = {}, bin# = {}".format(addr, bin_list[addr]))

@@ -80,13 +80,13 @@ def config_hardware(uuid, data: dict):
     status = False
     err = ""
     try:
-        srcip = data["data_a_srcip"]
-        dstip = data["data_b_srcip"]
+        dataaip = data["data_a_srcip"]
+        databip = data["data_b_srcip"]
         macmsb = data["destmac_msb"]
         maclsb = data["destmac_lsb"]
         macmsb = int(macmsb, 32)
         maclsb = int(maclsb, 16)
-        ri.configure_registers(srcip, dstip, macmsb, maclsb)
+        ri.configure_registers(dataaip, databip, macmsb, maclsb)
         status = True
     except KeyError:
         err = "missing required parameters"
@@ -172,6 +172,10 @@ def main():
     # loop forever until connection comes up?
     while 1:
         msg = connection.grab_command_msg()
+        if msg is None:
+            sleep(3)
+            log.warning("No message received from redis server after timeout")
+            continue
         if msg["type"] == "message":
             try:
                 command = json.loads(msg["data"].decode())
@@ -197,16 +201,29 @@ def main():
                 connection.sendmsg(response_str)
             else:
                 log.warning(f"Unknown command: {command['command']}")
+        else:
+            continue
 
 
 class RedisConnection:
     def __init__(self, host, port) -> None:
         self.r = redis.Redis(host=host, port=6379)
-
-        if self.is_connected():
-            self.pubsub = self.r.pubsub()
-            self.pubsub.subscribe("COMMAND")
-
+        loopcount = 0;
+        while 1:
+            log.info("Attempting to connect to redis server")
+            if loopcount > 0:
+                log.info(f"Attempt {loopcount} to connect to redis server")
+            loopcount += 1
+            if self.r.is_connected():
+                self.pubsub = self.r.pubsub()
+                break
+            elif loopcount > 10:
+                log.error("Could not connect to redis server after 10 attempts")
+                exit(0)
+            else:
+                log.warning("Could not connect to redis server")
+                sleep(3)
+                
     def is_connected(self):
         """Check if the RFSOC is connected to the redis server
 
@@ -234,8 +251,9 @@ class RedisConnection:
         :rtype: str
         """
         if self.is_connected():
-            self.pubsub.get_message(timeout=None)
-            return
+            return self.pubsub.get_message(timeout=None)
+        else:
+            return None
 
     def sendmsg(self, response):
         if self.is_connected():

@@ -8,6 +8,7 @@ HOST = "localhost"
 PORT = 6379
 log = logging.getLogger(__name__)
 
+
 class RedisConnection:
     """Class representing a connection to a Redis server.
 
@@ -50,7 +51,7 @@ class RedisConnection:
 
     def issue_command(self, rfsocname, command, args, timeout):
         """Issues a command via redis to the RFSoC and waits for a response or timeout.
-                
+
         Args:
             rfsocname (str): The name of the RFSoC.
             command (str): The command to be issued.
@@ -59,35 +60,42 @@ class RedisConnection:
         Returns:
             The response data if the command is successful, None otherwise.
         """
-       
+
         if not self.is_connected():
             log.error("NOT CONNECTED TO REDIS SERVER")
             return
 
-        uuid = str(uuid.uuid4())
+        uuid = str(uuid4())
         cmddict = {
-            "command" : command,
-            "uuid" : uuid, 
-            "data" : args,
-            }  
+            "command": command,
+            "uuid": uuid,
+            "data": args,
+        }
 
-        log.debug(f"Issuing command payload {cmddict} with timeout {timeout}; uuid: {uuid}")
-        self.r.publish("rfsoc", cmddict) 
-        response = self.pubsub.get_message(timeout=timeout) 
+        log.debug(
+            f"Issuing command payload {cmddict} with timeout {timeout}; uuid: {uuid}"
+        )
+        cmdstr = json.dumps(cmddict)
+        self.r.publish("rfsoc", cmdstr)
+        response = self.pubsub.get_message(timeout=timeout)
         if response is None:
-            log.warning("received no response from RFSOC within specified timeout period")
+            log.warning(
+                "received no response from RFSOC within specified timeout period"
+            )
             return None
         # see command reference format in docs
         try:
-            if response['type'] == "message":
-                body = response['data']
+            if response["type"] == "message":
+                body = response["data"]
                 body = json.loads(body.decode())
-                status = body['status']
-                error = body['error']
-                reply_uuid = body['uuid']
-                data = body['data']
+                status = body["status"]
+                error = body["error"]
+                reply_uuid = body["uuid"]
+                data = body["data"]
                 if reply_uuid != uuid:
-                    log.warning(f"reply UUID did not match message uuid as expected\nreplyuuid={reply_uuid}, uuid={uuid}")
+                    log.warning(
+                        f"reply UUID did not match message uuid as expected\nreplyuuid={reply_uuid}, uuid={uuid}"
+                    )
                     return None
                 if status == "OK":
                     log.info("Command Success")
@@ -97,7 +105,7 @@ class RedisConnection:
                     return None
             else:
                 log.error(f"incorrect message type received\n{response}")
-                
+
         except KeyError:
             err = "missing data from reply message"
             log.error(err)
@@ -107,12 +115,11 @@ class RedisConnection:
             err = "json failed to decode the body of the reply message"
             log.error(err)
             return
-        
 
 
 class RFSOC:
     rcon = RedisConnection()
-    
+
     def __init__(self, ip, rfsoc_name) -> None:
         """Bread and butter of the RFSOC object. This is the main object that facilitates control over the readout system.
 
@@ -126,13 +133,10 @@ class RFSOC:
         self._ch1 = rfchannel()
         self._ch2 = rfchannel()
 
-
     def upload_bitstream(self, path: str):
         """Command the RFSoC to upload(or reupload) it's FPGA Firmware"""
         assert isinstance(path, str) == True, "Path should be a string"
-        args = {
-                "abs_bitstream_path" : path
-                }
+        args = {"abs_bitstream_path": path}
         response = RFSOC.rcon.issue_command(self.name, "upload_bitstream", args, 10)
         if response is None:
             log.error("upload_bitstream failed")
@@ -140,8 +144,6 @@ class RFSOC:
         log.info("upload_bitstream success")
         return
 
-
-   
     def config_hardware(self, data_a_srcip, data_b_srcip, dstmac):
         """The RFSoC has several hardware configurations that need to be set before it can be used. This function sets those configurations.
 
@@ -158,10 +160,10 @@ class RFSOC:
             log.warning("bad mac address, expected 12 characters")
             return
         data = {}
-        data['data_a_srcip'] = data_a_srcip
-        data['data_b_srcip'] = data_b_srcip
-        data['destmac_msb'] = dstmac[:8]
-        data['destmac_lsb'] =  dstmac[8:]
+        data["data_a_srcip"] = data_a_srcip
+        data["data_b_srcip"] = data_b_srcip
+        data["destmac_msb"] = dstmac[:8]
+        data["destmac_lsb"] = dstmac[8:]
 
         response = RFSOC.rcon.issue_command(self.name, "config_hardware", data, 10)
         if response is None:
@@ -170,15 +172,13 @@ class RFSOC:
         log.info("config_hardware success")
         return
 
-
-
     def set_tone_list(self, chan=1, tonelist=[], amplitudes=[]):
         """Set a DAC channel to generate a signal from a list of tones
 
         :param chan: The DAC channel on the RFSoC to set, defaults to 1
         :type chan: int, optional
         :param tonelist: list of tones in MHz to generate, defaults to []
-        :type tonelist: list, optional  
+        :type tonelist: list, optional
         :param amplitudes: list of tone powers per tone, Normalized to 1, defaults to []
         :type amplitudes: list, optional
         """
@@ -192,12 +192,10 @@ class RFSOC:
         if isinstance(amplitudes, np.ndarray):
             a = amplitudes.tolist()
 
+        data["tone_list"] = f
+        data["channel"] = chan
+        data["amplitudes"] = a
 
-        data['tone_list'] = f
-        data['channel'] = chan
-        data['amplitudes'] = a
-
-        
         if chan == 1:
             self._ch1.baseband_freqs = f
             self._ch1.tone_powers = a
@@ -219,7 +217,7 @@ class RFSOC:
     def get_tone_list(self, chan: int = 1):
         """
         Retrieves the tone list and amplitudes for the specified channel.
-        Note that this function does update the internal state of the rfchannel object. This is to ensure that the 
+        Note that this function does update the internal state of the rfchannel object. This is to ensure that the
         tones and amplitudes are in sync with the HDF5 data files.
 
         Args:
@@ -236,19 +234,16 @@ class RFSOC:
             log.error("get_tone_list failed")
         else:
             if chan == 1:
-                self._ch1.baseband_freqs = response['tone_list']
-                self._ch1.tone_powers = response['amplitudes']
-                self._ch1.n_tones = len(response['tone_list'])
+                self._ch1.baseband_freqs = response["tone_list"]
+                self._ch1.tone_powers = response["amplitudes"]
+                self._ch1.n_tones = len(response["tone_list"])
             else:
-                self._ch2.baseband_freqs = response['tone_list']
-                self._ch2.tone_powers = response['amplitudes']
-                self._ch2.n_tones = len(response['tone_list'])
+                self._ch2.baseband_freqs = response["tone_list"]
+                self._ch2.tone_powers = response["amplitudes"]
+                self._ch2.n_tones = len(response["tone_list"])
 
             log.info(f"get_tone_list success for channel {chan}")
             return self._ch1.baseband_freqs, self._ch1.tone_powers
-
-
-
 
 
 class rfchannel:
@@ -283,7 +278,7 @@ class rfchannel:
         self.baseband_freqs = np.empty(2)  # empty ndarray
         self.tone_powers = np.empty(2)
         self.attenuator_settings = (0.0, 0.0)
-        self.n_tones = 0    
+        self.n_tones = 0
 
         self.port = 4096
         self.name = ""

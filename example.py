@@ -14,19 +14,20 @@ def main():
     """
     
     """
-    r1 = kp3.RFSOC("192.168.2.128", rfsoc_name="rfsoc1")
-    r1.upload_bitstream()
-    r1.config_hardware("192.168.3.50", "192.168.3.51", "A0CEC8B0C852")
-    r1.set_tone_list(1, [1e6, 12e6, 13e6, 50e6, 125e6, 200e6], [1, 1, 1, 1, 1, 1])
+    print("Start test")
+    rfsoc1 = kp3.RFSOC("192.168.2.128", rfsoc_name="rfsoc1")
+    rfsoc1.upload_bitstream()
+    rfsoc1.config_hardware("192.168.3.50", "192.168.3.51", "A0CEC8B0C852")
+    rfsoc1.set_tone_list(1, [1e6, 12e6, 13e6, 50e6, 125e6, 200e6], [1, 1, 1, 1, 1, 1])
     freqs_up = -1.0*np.linspace(251.0e6,1.0e6,500)
     freqs_lw = 1.0*np.linspace(2.25e6,252.25e6,500)
     freqs = np.append(freqs_up,freqs_lw)
-    r1.set_tone_list(2, freqs, np.ones(1000))
+    rfsoc1.set_tone_list(2, freqs, np.ones(1000))
 
 
+
     
-    
-    
+
     
     # print(r2.connected)
     # r2 = kp3.RFSOC("192.168.3.96", rfsoc_number=2)

@@ -9,6 +9,7 @@ if getpass.getuser() != "root":
     log.error("rfsocInterface.py: root priviliges are required, please run as root.")
     sys.exit()
 
+import pynq
 from pynq import Overlay
 from pynq import MMIO
 import xrfclk
@@ -26,7 +27,7 @@ def uploadOverlay(overlayPath: str):
     :type overlayPath: str
     """
     if overlayPath is None:
-        firmware = Overlay("last_horizon_20231205-1117.bit", ignore_version=True)
+        firmware = Overlay("bram_lutwave_wrapper_2406031500.bit", ignore_version=True)
     else:
         firmware = Overlay(overlayPath, ignore_version=True)
     firmware = firmware

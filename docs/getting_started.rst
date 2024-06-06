@@ -95,6 +95,15 @@ For users with Ubuntu 20.04 LTS or later
 
       source ~/venv3.8/bin/activate
 
+Setup the Redis Server
+----------------------
+1. Install the redis server::
+
+      sudo apt update && sudo apt upgrade -y
+
+      sudo apt-get install redis-server -y
+
+
 
 Setup the Library 
 -----------------
@@ -107,12 +116,4 @@ Setup the Library
 
 
 2. TBD
-
-Setup the Redis Server
-----------------------
-1. Install the redis server::
-
-      sudo apt update && sudo apt upgrade -y
-
-      sudo apt-get install redis-server -y
 

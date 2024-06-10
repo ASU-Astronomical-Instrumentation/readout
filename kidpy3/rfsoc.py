@@ -4,9 +4,10 @@ from uuid import uuid4
 import redis
 import json
 
-HOST = "localhost"
+HOST = "192.168.2.10"
 PORT = 6379
 log = logging.getLogger(__name__)
+import ipaddress
 
 
 class RedisConnection:
@@ -27,7 +28,7 @@ class RedisConnection:
         if self.is_connected():
             self.pubsub = self.r.pubsub()
             self.pubsub.subscribe("REPLY")
-            log.debug(self.pubsub.get_message())
+            log.debug(self.pubsub.get_message(timeout=1))
 
     def is_connected(self):
         """Check if the RFSOC is connected to the redis server
@@ -76,7 +77,7 @@ class RedisConnection:
             f"Issuing command payload {cmddict} with timeout {timeout}; uuid: {uuid}"
         )
         cmdstr = json.dumps(cmddict)
-        self.r.publish("rfsoc", cmdstr)
+        self.r.publish(rfsocname, cmdstr)
         response = self.pubsub.get_message(timeout=timeout)
         if response is None:
             log.warning(
@@ -101,10 +102,10 @@ class RedisConnection:
                     log.info("Command Success")
                     return data
                 else:
-                    log.error(f"rfsoc {rfsocname} reported an error:\n{error}")
+                    log.error(f" {rfsocname} reported an error:\n{error}")
                     return None
-            else:
-                log.error(f"incorrect message type received\n{response}")
+            elif response["type"] == "subscribe":
+                log.warning(f"received subscribe message\n{response}")
 
         except KeyError:
             err = "missing data from reply message"
@@ -137,7 +138,7 @@ class RFSOC:
         """Command the RFSoC to upload(or reupload) it's FPGA Firmware"""
         assert isinstance(path, str) == True, "Path should be a string"
         args = {"abs_bitstream_path": path}
-        response = RFSOC.rcon.issue_command(self.name, "upload_bitstream", args, 10)
+        response = RFSOC.rcon.issue_command(self.name, "upload_bitstream", args, 20)
         if response is None:
             log.error("upload_bitstream failed")
             return
@@ -160,8 +161,8 @@ class RFSOC:
             log.warning("bad mac address, expected 12 characters")
             return
         data = {}
-        data["data_a_srcip"] = data_a_srcip
-        data["data_b_srcip"] = data_b_srcip
+        data["data_a_srcip"] = hex(int(ipaddress.IPv4Address(data_a_srcip)))
+        data["data_b_srcip"] = hex(int(ipaddress.IPv4Address(data_b_srcip)))
         data["destmac_msb"] = dstmac[:8]
         data["destmac_lsb"] = dstmac[8:]
 

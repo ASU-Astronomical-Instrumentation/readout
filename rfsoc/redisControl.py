@@ -20,6 +20,7 @@ logh = logging.FileHandler("./rediscontrol_debug.log")
 log.addHandler(logh)
 logh.setFormatter(logging.Formatter(__LOGFMT))
 
+log.info("Starting redisControl.py; loading libraries")
 
 # rfsocInterface uses the 'PYNQ' library which requires root priviliges+
 import getpass
@@ -80,13 +81,15 @@ def config_hardware(uuid, data: dict):
     status = False
     err = ""
     try:
+        print(f"config_hardware, {data}")
         dataaip = data["data_a_srcip"]
         databip = data["data_b_srcip"]
         macmsb = data["destmac_msb"]
         maclsb = data["destmac_lsb"]
-        macmsb = int(macmsb, 32)
+        macmsb = int(macmsb, 16)
         maclsb = int(maclsb, 16)
         ri.configure_registers(dataaip, databip, macmsb, maclsb)
+        log.debug(f"Would configure registers as follows: {dataaip}, {databip}, {hex(macmsb)}, {hex(maclsb)}")
         status = True
     except KeyError:
         err = "missing required parameters"
@@ -94,6 +97,7 @@ def config_hardware(uuid, data: dict):
     except ValueError:
         err = "invalid parameter data type"
         log.error(err)
+        raise
     return create_response(status, uuid, error=err)
 
 
@@ -165,10 +169,11 @@ def load_config() -> config.GeneralConfig:
 
 def main():
     conf = load_config()
-    conf.cfg.rfsocName = "rfsoc1"
+    name = "rfsoc1"
+    conf.cfg.rfsocName = name
     crash_on_noconnection = False
-    connection = RedisConnection(conf.cfg.redis_host, port=conf.cfg.redis_port)
-
+    connection = RedisConnection(name, conf.cfg.redis_host, port=conf.cfg.redis_port)
+    log.debug("Connection to redis server established")
     # loop forever until connection comes up?
     while 1:
         msg = connection.grab_command_msg()
@@ -176,6 +181,8 @@ def main():
             sleep(3)
             log.warning("No message received from redis server after timeout")
             continue
+        else:
+            log.debug("received a message from redis server")
         if msg["type"] == "message":
             try:
                 command = json.loads(msg["data"].decode())
@@ -197,6 +204,7 @@ def main():
                     log.warning(f"No data provided for command: {command['command']}")
                     # Should this actually reply with an error message
                     continue
+                log.debug(f"Executing command: {command['command']} with args: {args}")
                 response_str = function(uuid, args)
                 connection.sendmsg(response_str)
             else:
@@ -206,16 +214,18 @@ def main():
 
 
 class RedisConnection:
-    def __init__(self, host, port) -> None:
-        self.r = redis.Redis(host=host, port=6379)
+    def __init__(self, name, host, port) -> None:
+        self.r = redis.Redis(host=host, port=port)
         loopcount = 0;
         while 1:
             log.info("Attempting to connect to redis server")
             if loopcount > 0:
                 log.info(f"Attempt {loopcount} to connect to redis server")
             loopcount += 1
-            if self.r.is_connected():
+            if self.is_connected():
                 self.pubsub = self.r.pubsub()
+                logging.debug(f"subscribing to {name}")
+                self.pubsub.subscribe(name)
                 break
             elif loopcount > 10:
                 log.error("Could not connect to redis server after 10 attempts")
@@ -230,6 +240,7 @@ class RedisConnection:
         :return: true if connected, false if not
         :rtype: bool
         """
+        log.debug("Checking connection to redis server")
         is_connected = False
         try:
             self.r.ping()  # Doesn't just return t/f, it throws an exception if it can't connect.. y tho?
@@ -269,4 +280,4 @@ COMMAND_DICT = {
 }
 
 if __name__ == "__main__":
-    load_config()
+    main()

@@ -26,15 +26,16 @@ def uploadOverlay(overlayPath: str):
     :param overlayPath: Path to the overlay to upload
     :type overlayPath: str
     """
+    global firmware
     if overlayPath is None:
         firmware = Overlay("bram_lutwave_wrapper_2406031500.bit", ignore_version=True)
     else:
         firmware = Overlay(overlayPath, ignore_version=True)
-    firmware = firmware
+    xrfclk.set_all_ref_clks(409.6)
 
 
 def configure_registers(
-    self, dataA_srcip: str, dataB_srcip: str, dstmacMSB: int, dstmacLSB: int
+    dataA_srcip: str, dataB_srcip: str, dstmacMSB: int, dstmacLSB: int
 ):
     # SET ETHERNET IPS and MACS
     def ethRegsPortWrite(
@@ -54,13 +55,13 @@ def configure_registers(
 
     ethRegsPortWrite(
         firmware.ethWrapPort0.eth_regs_0,
-        src_ip_int32=dataA_srcip,
+        src_ip_int32=int(dataA_srcip, 16),
         dst_mac1_int32=dstmacMSB,
         dst_mac0_int16=dstmacLSB,
     )  # OPSERO PORT 3, CHAN 1
     ethRegsPortWrite(
         firmware.ethWrapPort1.eth_regs_0,
-        src_ip_int32=dataB_srcip,
+        src_ip_int32=int(dataB_srcip, 16),
         dst_mac1_int32=dstmacMSB,
         dst_mac0_int16=dstmacLSB,
     )  # OPSERO PORT 2, CHAN 2

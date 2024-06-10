@@ -48,7 +48,7 @@ class kidpy3_GUI(tk.Tk):
         textbox2.insert(0, cfg["DEFAULT"]["rf1dchan2"])
         textbox3.insert(0, cfg["DEFAULT"]["rf1dstmac"])
 
-        textbox4 = ttk.Entry(firmware_frame)
+        textbox4 = ttk.Entry(firmware_frame, )
         textbox5 = ttk.Entry(firmware_frame)
         textbox6 = ttk.Entry(firmware_frame)
         textbox4.insert(0, cfg["DEFAULT"]["rf2dchan1"])

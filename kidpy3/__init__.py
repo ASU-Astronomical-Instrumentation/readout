@@ -12,6 +12,9 @@ else:
 from .rfsoc import RFSOC
 from . import data_handler
 from .udp2 import libcapture
+from . import ifslice
+from . import measurements
+from .udp2 import udpcap
 
 # from kidpy3.data_handler import RawDataFile
 
@@ -20,7 +23,7 @@ from .udp2 import libcapture
 import logging
 
 __LOGFMT = "%(asctime)s|%(levelname)s|%(filename)s|%(lineno)d|%(funcName)s| %(message)s"
-logging.basicConfig(format=__LOGFMT, level=logging.DEBUG)
+logging.basicConfig(format=__LOGFMT, level=logging.INFO)
 logger = logging.getLogger(__name__)
 logh = logging.FileHandler("./kidpy_debug.log")
 logger.addHandler(logh)

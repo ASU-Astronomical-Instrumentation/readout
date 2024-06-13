@@ -118,7 +118,7 @@ class Synthesizer:
         @return: True if success (bool)
         """
         self.conn.open()
-        print(f"\nvalon5009.py:set_frequency->SET FREQ TO {freq}")
+        # print(f"\nvalon5009.py:set_frequency->SET FREQ TO {freq}")
         #b"s2;f400.1299999\r"
         data = "s" + str(synth) + ";f" + "{}".format(freq) + "\r"
         self.conn.write(data.encode("ASCII"))
@@ -443,35 +443,37 @@ class IfSliceAtten:
         ports = serial.tools.list_ports.comports()
         COMPORT = ""
         for sp in ports:
-            print(
-                "{}:\n   Description: {}\n   hwid[{}]\n   Vendor Id: {}\n   Product Id: {}\n   Product String: {}".format(
-                    sp.name, sp.description, sp.hwid, sp.vid, sp.pid, sp.product
-                )
-            )
             if sp.vid == 9025 and sp.pid == 32855:
                 print("Found the device")
                 COMPORT = sp.name
+                break
 
         if COMPORT == "":
             print("No device found")
             exit()
 
-        self.ser = serial.Serial(COMPORT, 115200, timeout=1)
+        self.ser = serial.Serial("/dev/"+COMPORT, 115200, timeout=1)
         self.ser.close()
 
     def set_atten(self,  addr:int, value : float):
-       self.ser.open()
-       assert value >= 0 and value <= 31.75, "Attenuation out of range"
-       atten = int(round(value*4))&0xFF
-       address = addr&0xFF
-       data = struct.pack('<BB', address, atten)
-       self.ser.write(b"set_atten\n")
-       self.ser.write(data)
-       response = self.ser.read_until(b'\n')
-       self.ser.close()
-       if response.strip() == b'OK':
-           return True
-       else:
+        """
+        Sets the IF Slices Attenuation
+        :param addr(int): address to set, (usually 1 and 2)
+        :param value(float): attenuation from 0 to 31.75 dB
+        :return: True if success, False if failure
+        """
+        self.ser.open()
+        assert value >= 0 and value <= 31.75, "Attenuation out of range"
+        atten = int(round(value*4))&0xFF
+        address = addr&0xFF
+        data = struct.pack('<BB', address, atten)
+        self.ser.write(b"set_atten\n")
+        self.ser.write(data)
+        response = self.ser.read_until(b'\n')
+        self.ser.close()
+        if response.strip() == b'OK':
+            return True
+        else:
             msg = response.decode()
             if len(msg) == 0:
                 print("Error, device did not respond")

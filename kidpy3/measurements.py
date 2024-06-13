@@ -6,7 +6,7 @@ Measurements such as sweeps and noise shall be implemented here
 
 """
 import numpy as np
-from ifslice import Synthesizer, SYNTH_B
+from .ifslice import Synthesizer, SYNTH_B
 import logging
 
 logger = logging.getLogger(__name__)
@@ -57,7 +57,7 @@ def sweep(loSource: Synthesizer, udp, f_center, freqs, N_steps=500, freq_step=0.
         # Read values and trash initial read, suspecting linear delay is cause..
         Naccums = 100
         I, Q = [], []
-        for i in range(20):  # toss 10 packets in the garbage
+        for i in range(40):  # toss 10 packets in the garbage
             udp.parse_packet()
 
         for i in range(Naccums):
@@ -82,13 +82,9 @@ def sweep(loSource: Synthesizer, udp, f_center, freqs, N_steps=500, freq_step=0.
     sweep_Z = np.array([temp(lofreq) for lofreq in flos])
     log.info(f"sweepz.shape={sweep_Z.shape}")
 
-    f = np.zeros([np.size(freqs), np.size(flos)])
-    log.info(f"shape of f = {f.shape}")
-    for itone, ftone in enumerate(freqs):
-        f[itone, :] = flos * 1.0e6 + ftone
-    #    f = np.array([flos * 1e6 + ftone for ftone in freqs]).flatten()
+    f = np.array([flos * 1e6 + ftone for ftone in freqs]).flatten()
     sweep_Z_f = sweep_Z.T
-    #    sweep_Z_f = sweep_Z.T.flatten()
+    sweep_Z_f = sweep_Z.T.flatten()
     udp.release()
     ## SAVE f and sweep_Z_f TO LOCAL FILES
     # SHOULD BE ABLE TO SAVE TARG OR VNA

@@ -31,13 +31,12 @@ if getpass.getuser() != "root":
 
 
 import redis
-
-# import rfsocInterface
 from uuid import uuid4
 import numpy as np
 import json
 from time import sleep
 import config
+import ipaddress
 
 import rfsocInterfaceDual as ri
 
@@ -78,18 +77,31 @@ def upload_bitstream(uuid, data: dict):
 
 
 def config_hardware(uuid, data: dict):
+    """
+
+    :param uuid:
+    :param data:
+    :return:
+    """
+
     status = False
     err = ""
     try:
         print(f"config_hardware, {data}")
-        dataaip = data["data_a_srcip"]
-        databip = data["data_b_srcip"]
-        macmsb = data["destmac_msb"]
-        maclsb = data["destmac_lsb"]
-        macmsb = int(macmsb, 16)
-        maclsb = int(maclsb, 16)
-        ri.configure_registers(dataaip, databip, macmsb, maclsb)
-        log.debug(f"Would configure registers as follows: {dataaip}, {databip}, {hex(macmsb)}, {hex(maclsb)}")
+        data_a_srcip = int(ipaddress.ip_address(data["data_a_srcip"]))
+        data_b_srcip = int(ipaddress.ip_address(data["data_b_srcip"]))
+        data_a_dstip = int(ipaddress.ip_address(data["data_a_dstip"]))
+        data_b_dstip = int(ipaddress.ip_address(data["data_b_dstip"]))
+        dstmac_a_msb = int(data["destmac_a_msb"], 16)
+        dstmac_a_lsb = int(data["destmac_a_lsb"], 16)
+        dstmac_b_msb = int(data["destmac_b_msb"], 16)
+        dstmac_b_lsb = int(data["destmac_b_lsb"], 16)
+        porta = int(data["port_a"])
+        portb = int(data["port_b"])
+
+        ri.configure_registers(data_a_srcip, data_b_srcip, data_a_dstip, data_b_dstip, dstmac_a_msb, dstmac_a_lsb,
+                               dstmac_b_msb, dstmac_b_lsb, porta, portb)
+
         status = True
     except KeyError:
         err = "missing required parameters"
@@ -222,7 +234,7 @@ class RedisConnection:
             if loopcount > 0:
                 log.info(f"Attempt {loopcount} to connect to redis server")
             loopcount += 1
-            if self.is_connected():
+            if self.check_connection():
                 self.pubsub = self.r.pubsub()
                 logging.debug(f"subscribing to {name}")
                 self.pubsub.subscribe(name)
@@ -234,7 +246,7 @@ class RedisConnection:
                 log.warning("Could not connect to redis server")
                 sleep(3)
                 
-    def is_connected(self):
+    def check_connection(self):
         """Check if the RFSOC is connected to the redis server
 
         :return: true if connected, false if not
@@ -261,13 +273,13 @@ class RedisConnection:
         :return: the message
         :rtype: str
         """
-        if self.is_connected():
+        if self.check_connection():
             return self.pubsub.get_message(timeout=None)
         else:
             return None
 
     def sendmsg(self, response):
-        if self.is_connected():
+        if self.check_connection():
             self.r.publish("REPLY", response)
             return
 

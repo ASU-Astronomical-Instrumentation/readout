@@ -1,0 +1,15 @@
+h5py
+redis
+pyserial
+numpy
+matplotlib
+jupyterlab
+ipympl
+pandas
+pillow
+ipywidgets
+black
+scipy
+Sphinx
+sphinx-rtd-theme
+omegaconf

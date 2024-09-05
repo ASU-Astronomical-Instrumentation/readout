@@ -3,11 +3,16 @@ import logging
 from uuid import uuid4
 import redis
 import json
+import ipaddress
+
+__all__ = [
+    'RFSOC',
+    'rfchannel'
+]
 
 HOST = "192.168.2.10"
 PORT = 6379
 log = logging.getLogger(__name__)
-import ipaddress
 
 
 class RedisConnection:
@@ -121,15 +126,15 @@ class RedisConnection:
 class RFSOC:
     rcon = RedisConnection()
 
-    def __init__(self, ip, rfsoc_name) -> None:
+    def __init__(self, redis_ip, rfsoc_name) -> None:
         """Bread and butter of the RFSOC object. This is the main object that facilitates control over the readout system.
 
-        :param ip: _description_
-        :type ip: _type_
+        :param redis_ip: _description_
+        :type redis_ip: _type_
         :param rfsoc_number: _description_
         :type rfsoc_number: _type_
         """
-        log.debug(f"rfsoc object created {rfsoc_name} {ip}")
+        log.debug(f"rfsoc object created {rfsoc_name} {redis_ip}")
         self.name = rfsoc_name
         self._ch1 = rfchannel()
         self._ch2 = rfchannel()
@@ -145,33 +150,48 @@ class RFSOC:
         log.info("upload_bitstream success")
         return
 
-    def config_hardware(self, data_a_srcip, data_b_srcip, dstmac):
-        """The RFSoC has several hardware configurations that need to be set before it can be used. This function sets those configurations.
-
-        :param srcip: IP address the RFSoC will use to send data
-        :type srcip: str
-        :param dstip: IP address the host computer will use to receive data from the RFSoC.
-        :type dstip: str
-        :param srcmac: MAC address of the RFSoC
-        :type srcmac: str
-        :param dstmac: MAC address of the host computer network interface
-        :type dstmac: str
+    def config_hardware(self, data_a_srcip: str, data_b_srcip: str, data_a_dstip: str, data_b_dstip: str, dstmac_a: str,
+                        dstmac_b: str = None, port_a: int = 4096, port_b: int = 4096) -> bool:
         """
-        if len(dstmac) != 12:
+        Configure the network parameters on the RFSOC
+        :param data_a_srcip: Source IP for data A (channel 1)
+        :type data_a_srcip: str
+            ex: "192.168.3.40"
+        :param data_b_srcip: Source IP for data B (channel 2)
+        :param data_a_dstip: Desintation IP for data A (channel 1)
+        :param data_b_dstip: Desintation IP for data B (channel 2)
+        :param dstmac_a: Destination MAC address data A (channel 1)
+        :param dstmac_b: Destination MAC address data B (channel 2)
+        :param port_a: Data A (channel 1) port
+            Note: this is used as both source and destination ports
+        :param port_b: Data B (channel 2) port
+            Note: this is used as both source and destination ports
+        :return:
+        """
+
+        if len(dstmac_a) != 12:
             log.warning("bad mac address, expected 12 characters")
-            return
+            return False
         data = {}
         data["data_a_srcip"] = hex(int(ipaddress.IPv4Address(data_a_srcip)))
         data["data_b_srcip"] = hex(int(ipaddress.IPv4Address(data_b_srcip)))
-        data["destmac_msb"] = dstmac[:8]
-        data["destmac_lsb"] = dstmac[8:]
+        data["data_a_dstip"] = hex(int(ipaddress.IPv4Address(data_a_dstip)))
+        data["data_b_dstip"] = hex(int(ipaddress.IPv4Address(data_b_dstip)))
+        data["destmac_a_msb"] = dstmac_a[:8]
+        data["destmac_a_lsb"] = dstmac_a[8:]
+        data["destmac_b_msb"] = dstmac_b[:8]
+        data["destmac_b_lsb"] = dstmac_b[8:]
+        data["port_b"] = port_a
+        data["port_b"] = port_b
 
         response = RFSOC.rcon.issue_command(self.name, "config_hardware", data, 10)
         if response is None:
             log.error("config_hardware failed")
-            return
+            return False
         log.info("config_hardware success")
-        return
+        self._ch1.port = port_a
+        self._ch2.port = port_b
+        return True
 
     def set_tone_list(self, chan=1, tonelist=[], amplitudes=[]):
         """Set a DAC channel to generate a signal from a list of tones

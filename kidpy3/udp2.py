@@ -19,7 +19,6 @@ Unlike udpcap, udp2 utilizes the hdf5 obervation file format defined by data_han
 import ctypes
 import logging
 import numpy as np
-import socket
 
 from .rfsoc import RFSOC, rfchannel
 from .data_handler import RawDataFile
@@ -33,8 +32,9 @@ NC = "\033[0m"  # No Color
 
 logger = logging.getLogger(__name__)
 
+__all__ = ['capture']
 
-def __data_writer_process(dataqueue, chan: rfchannel, runFlag):
+def _data_writer_process(dataqueue, chan: rfchannel, runFlag):
     """
     Creates a RawDataFile and populates it with data that is passed to it through
     the dataqueue parameter. This function runs indefinitely until
@@ -90,7 +90,7 @@ def __data_writer_process(dataqueue, chan: rfchannel, runFlag):
     # log.warning("Keyboard Interrupt Caught. This terminates processes that may be writing to a file. Expect possible hdf5 data corruption")
 
 
-def __data_collector_process(dataqueue, chan: rfchannel, runFlag):
+def _data_collector_process(dataqueue, chan: rfchannel, runFlag):
     """
     Creates a socket connection and collects udp data. Said data is put in a tuple and
     passed to it's partner data writer process through the queue. When collection ends, None is possed into the
@@ -148,7 +148,7 @@ def __data_collector_process(dataqueue, chan: rfchannel, runFlag):
     return
 
 
-def exceptionCallback(e: Exception):
+def exception_callback(e: Exception):
     log = logger.getChild(__name__)
     log.error(str(e))
     raise e
@@ -226,15 +226,15 @@ def capture(channels: list, fn=None, *args, **kwargs):
     for chan in channels:
         dataqueue = manager.Queue()
         pool.apply_async(
-            __data_writer_process,
+            _data_writer_process,
             (dataqueue, chan, runFlag),
-            error_callback=exceptionCallback,
+            error_callback=exception_callback,
         )
         log.debug(f"Spawned data collector process: {chan.name}")
         pool.apply_async(
-            __data_collector_process,
+            _data_collector_process,
             (dataqueue, chan, runFlag),
-            error_callback=exceptionCallback,
+            error_callback=exception_callback,
         )
         log.debug(f"Spawned data writer process: {chan.name}")
 
@@ -268,15 +268,6 @@ def capture(channels: list, fn=None, *args, **kwargs):
     log.info("Capture finished")
 
 
-# This is a test function to iterate through the RFSOC objects and print out their UUIDs and channel names
-from typing import List
-
-
-def libcapture(RFSOCS: List[RFSOC], fn=None, *args, **kwargs):
-    print("This is a test")
-    for r in RFSOCS:
-        print(r.name)
-
 
 class udpcap():
     def __init__(self, UDP_IP = "192.168.3.40", UDP_PORT = 4096):
@@ -304,93 +295,22 @@ class udpcap():
         return spec_data # int32 data type
 
 
-    def capture_packets(self, N_packets):
+    def capture_packets(self, n_packets):
         """
         DEPRECATED
         """
-        packets = np.zeros(shape=(2052,N_packets))
+        packets = np.zeros(shape=(2052, n_packets))
         #packets = np.zeros(shape=(2051,N_packets))
         counter = 0
-        for i in range(N_packets):
+        for i in range(n_packets):
             data_2 = self.parse_packet()
             packets[:,i] = data_2 
             if i%488 == 0:
-                print("{}/{} captured ({:.3f}% Complete)".format(i, N_packets, 
-                    (N_packets/488)*100.0))
+                print("{}/{} captured ({:.3f}% Complete)".format(i, n_packets,
+                                                                 (n_packets / 488) * 100.0))
         return packets
 
 
-    def LongDataCapture(self, fname, nPackets):
-        """
-        Captures packets for extended periods of time utilzing pythons Multiprocessing library
-        fname : string
-            file name / path where data shall be exported
-        nPackets : int
-            Number of packets to save
-        """
-        try:
-            print("capture {} packets".format(nPackets))
-            print("Begin Capture")
-            
-            # enter while loop
-            
-            manager = mproc.Manager()
-            pool = manager.Pool(1)
-            queue = manager.Queue()
-            
-            pool.apply_async(ldcHelper, (queue, fname, nPackets))
-            count = 0
-            while count < nPackets:
-                packet = self.parse_packet()
-                if packet is None:
-                    continue
-                queue.put((packet, count))
-                count = count + 1
-                if count > 0 and count % 488 == 0:
-                    print("{}/{} captured ({:.2f}% Complete)".format(count, nPackets, ((count/nPackets)*100.0)))
-            # create helper process
-            # capture n packets 
-                # Dispatch helper process to dump data into hdf5 dataset
-            # continue to capture n packets, never interrupting datataking
-        
-        except TypeError:
-            print("Type error occured")
-            return False
-
-        except KeyboardInterrupt:
-            print("Interrupted Data Capture")
-            return False
-        return True
-
-
-    def shortDataCapture(self, fname, nPackets):
-        """
-        Performes sub 60 seconds data captures using only memory. 
-        Data is then transferred to a file after the collection is complete.
-        N : int
-            Number of packets to save
-        fname : string
-            file name / path
-        """
-
-        assert nPackets < 488*60, "METHOD NOT INTENDED FOR LONG DATA CAPTURES > 488 packets per second * 60 seconds"
-        pData = np.zeros((2052, nPackets))
-        try:
-            print("capture {} packets".format(nPackets))
-            dFile = h5py.File(fname, 'w')
-            pkts = dFile.create_dataset("PACKETS",(2052, nPackets), dtype=h5py.h5t.NATIVE_INT32, chunks=True, maxshape=(None, None))
-            time_stamp = dFile.create_dataset("TIME", (nPackets), dtype=h5py.h5t.NATIVE_FLOAT, chunks=True, maxshape=(None))
-            print("Begin Capture")
-            for i in range(nPackets):
-                pData[:, i] = self.parse_packet()
-                time_stamp[i] = time.time()
-                if i > 0 and i % 488 == 0:
-                    print("{}/{} captured ({:.2f}% Complete)".format(i, nPackets, ((i/nPackets)*100.0)))
-            pkts[...] = pData
-            dFile.close()
-        except Exception as errorE:
-            raise(errorE)
-        return True
 
     def release(self):
         self.sock.close()

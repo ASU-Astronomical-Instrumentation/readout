@@ -34,36 +34,41 @@ def uploadOverlay(overlayPath: str):
     xrfclk.set_all_ref_clks(409.6)
 
 
-def configure_registers(
-    dataA_srcip: str, dataB_srcip: str, dstmacMSB: int, dstmacLSB: int
-):
+def configure_registers(dataA_srcip: int, dataB_srcip: int, dataA_dstip: int, dataB_dstip: int, dstmac_a_msb: int,
+                        dstmac_b_lsb: int, portA: int, portB: int):
     # SET ETHERNET IPS and MACS
     def ethRegsPortWrite(
         eth_regs,
-        src_ip_int32=int("c0a80335", 16),  # 192.168.3.53
-        dst_ip_int32=int("c0a80328", 16),  # 192.168.3.40
+        src_ip_int32=int("c0a80335", 16),
+        dst_ip_int32=int("c0a80328", 16),
         src_mac0_int32=int("eec0ffee", 16),
         src_mac1_int16=int("c0ff", 16),
-        dst_mac0_int16=int("00F2", 16),  # 3CECEFBB00F2
+        dst_mac0_int16=int("00F2", 16),
         dst_mac1_int32=int("3CECEFBB", 16),
+        port=4096
     ):  # f
         eth_regs.write(0x00, src_mac0_int32)
         eth_regs.write(0x04, (dst_mac0_int16 << 16) + src_mac1_int16)
         eth_regs.write(0x08, dst_mac1_int32)
         eth_regs.write(0x0C, src_ip_int32)
         eth_regs.write(0x10, dst_ip_int32)
+        eth_regs.write(0x14, (port<<16) | port)
 
     ethRegsPortWrite(
         firmware.ethWrapPort0.eth_regs_0,
-        src_ip_int32=int(dataA_srcip, 16),
-        dst_mac1_int32=dstmacMSB,
-        dst_mac0_int16=dstmacLSB,
+        src_ip_int32=dataA_srcip,
+        dst_ip_int32=dataA_dstip,
+        dst_mac1_int32=dstmac_a_msb,
+        dst_mac0_int16=dstmac_b_lsb,
+        port=portA
     )  # OPSERO PORT 3, CHAN 1
     ethRegsPortWrite(
         firmware.ethWrapPort1.eth_regs_0,
-        src_ip_int32=int(dataB_srcip, 16),
-        dst_mac1_int32=dstmacMSB,
-        dst_mac0_int16=dstmacLSB,
+        src_ip_int32=dataB_srcip,
+        dst_ip_int32=dataB_dstip,
+        dst_mac1_int32=dstmac_a_msb,
+        dst_mac0_int16=dstmac_b_lsb,
+        port=portB
     )  # OPSERO PORT 2, CHAN 2
 
 

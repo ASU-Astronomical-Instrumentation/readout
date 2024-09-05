@@ -3,9 +3,9 @@
           - Jack Sayers
           - Daniel Cunnane
 
-:Date: 2023-08-01
+:Date: 2024-09-04
 
-:Version: 2.0.0
+:Version: 3.0.0
 
 Brief overview
 --------------
@@ -19,18 +19,8 @@ RawDataFile
 The RawDataFile class is analogous to standard camera's raw file. Detector data is captured, unprocessed into this file.
 
 
-Dimensions
---------------
-n_resonator
-
-
-ObservationDataFile
--------------------
-000
-
-
-
 """
+__all__ = ['RawDataFile']
 
 import h5py
 import os
@@ -46,7 +36,7 @@ logger = logging.getLogger(__name__)
 class RawDataFile:
     """A raw hdf5 data file object for incoming rfsoc-UDP data streams.
 
-    UDP packets containing our downsampled data streaming from the RFSOC to the readout computer
+    UDP packets containing our down-sampled data streaming from the RFSOC to the readout computer
     will be captured and saved to this hdf5 filetype.
 
     Previously, the user was responsible for specifying n_samples which was used to provision
@@ -55,7 +45,6 @@ class RawDataFile:
 
     :param str path: /file/path/here/file.h5
 
-    :param int n_tones: (Dimension) The number of resonance tones / DAC tones
 
     :param char filemode:  User Shall provide one of the following: 'r', 'w', 'a'.
         Filemode denotes how the RDF should be handled. If 'r', then the file is opened as 'read-only'.

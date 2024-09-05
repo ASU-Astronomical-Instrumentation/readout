@@ -6,11 +6,14 @@ Measurements such as sweeps and noise shall be implemented here
 
 """
 import numpy as np
-from .ifslice import Synthesizer, SYNTH_B
+from kidpy3.ifslice import Synthesizer, SYNTH_B
 import logging
 
 logger = logging.getLogger(__name__)
 
+__all__ = [
+    'loSweep'
+]
 
 def sweep(loSource: Synthesizer, udp, f_center, freqs, N_steps=500, freq_step=0.0):
     """

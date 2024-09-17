@@ -8,92 +8,89 @@ This is an example of how to use the kidpy3 package to control the RFSOC.
 """
 import kidpy3 as kp3
 import numpy as np
+import valon5009 as valon
 import os
+# import matplotlib.pyplot as plt
+import transceiver_serialdriver as ts
+from kidpy3.udp2 import udpcap
 
 
 CONTROLS = {
     1 : "Upload bitstream to rfsoc1",
     2 : "Configure hardware on rfsoc1",
-    3 : "Set tone list on Chan1:rfsoc1",
-    4 : "set_tone_list on Chan2:rfsoc1",
-    5 : "Upload bitstream to rfsoc2",
-    6 : "Configure hardware on rfsoc2",
-    7 : "Set tone list on Chan1:rfsoc2",
-    8 : "set_tone_list on Chan2:rfsoc2",
-    9 : "Upload bitstream to rfsoc3",
-    10 : "Configure hardware on rfsoc3",
-    11 : "Set tone list on Chan1:rfsoc3",
-    12 : "set_tone_list on Chan2:rfsoc3",
-    }
+    3 : "Set Chan1 rfsoc1 to a full comb",
+    4 : "LO Sweep",
+    5 : "set lo to 1000 MHz",
+    6 : "set attenuation",
+    7 : "set chan1 to 100 tones",
+    8 : "set chan1 to 10 tones"
+}
 
-def main():
+
+def oldmain():
+    """
+
+    """
     r1 = kp3.RFSOC("192.168.2.10", 'rfsoc1')
-    r1.upload_bitstream("DualChannel-240605.bit")
-    r1.config_hardware("192.168.3.41", "192.168.4.41",  "192.168.3.40",
-                       "192.168.4.40", "00C0FFEEBEEF", "00C0FFEEBEEF", 4096,
-                       4096)
-    r1.set_tone_list(1, [1e6, 12e6, 13e6, 50e6, 125e6, 200e6], [1, 1, 1, 1, 1, 1])
-    full_tones = np.concatenate(np.linspace(-256e6, 1e6, 500), np.linspace(1e6, 255e6, 500))
-    r1.set_tone_list(2, full_tones, np.ones_like(full_tones))
+    freqs_up = -1.0 * np.linspace(241.0e6, 1.0e6, 430)
+    freqs_lw = 1.0 * np.linspace(2.25e6, 242.25e6, 453)
+    freqs = np.append(freqs_up, freqs_lw)
+
+    fset2 =   np.append(-1.0 * np.linspace(251.0e6, 1.0e6, 50),
+                        1.0 * np.linspace(2.8e6, 252.25e6, 50))
+
+    fset3 =   np.append(-1.0 * np.linspace(251.0e6, 1.0e6, 5),
+                        1.0 * np.linspace(2.25e6, 252.25e6, 5))
+
+    attens = ts.Transceiver("/dev/ttyACM0")
 
 
+    lo_source = valon.Synthesizer("/dev/exclaim_lo")
+    lo_source.set_rf_level(2, 15.0)
+    lo_source.set_rf_level(1, 15.0)
+    port = udpcap()
+    try:
+        while True:
+            for opt in CONTROLS:
+                print(f"{opt} : {CONTROLS[opt]}")
 
+            choice = int(input("Enter the option number: "))
+            if choice == 1:
+                r1.upload_bitstream("last_horizon_20231203-0038.bit")
+            elif choice == 2:
+                r1.config_hardware("192.168.3.41", "192.168.4.41", "192.168.3.40",
+                                   "192.168.4.40", "681CA2123652", "681CA2123652", 4096,
+                                   4096)
+            elif choice == 3:
+                r1.set_tone_list(1, freqs, np.ones_like(freqs))
+            elif choice == 4:
+                kp3.science.loSweep(lo_source, port, freqs, 1000, N_steps=500,
+                                    savefile="/data/noise_20240913/")
+            elif choice == 5:
+                lo_source.set_frequency(2, 1000)
+                lo_source.set_frequency(1, 1000)
+            elif choice == 6:
+                try:
+                    a = int(input("Attenuator Address?  "))
+                    b = float(input("Attenuation?  "))
+                    attens.set_atten(a,b)
+                except ValueError:
+                    print("try harder next time")
+                except KeyboardInterrupt:
+                    break
+            elif choice == 7:
+                r1.set_tone_list(1, fset2, np.ones_like(fset2))
+            elif choice == 8:
+                r1.set_tone_list(1, fset3, np.ones_like(fset3))
 
-# def oldmain():
-#     """
-#
-#     """
-#     rfsoc1 = kp3.RFSOC("192.168.2.10", rfsoc_name="rfsoc1")
-#     rfsoc2 = kp3.RFSOC("192.168.2.10", rfsoc_name="rfsoc2")
-#     rfsoc3 = kp3.RFSOC("192.168.2.10", rfsoc_name="rfsoc3")
-#     try:
-#         while True:
-#             for opt in CONTROLS:
-#                 print(f"{opt} : {CONTROLS[opt]}")
-#
-#             choice = int(input("Enter the option number: "))
-#
-#             if choice == 1:
-#                 rfsoc1.upload_bitstream("DualChannel-240605.bit")
-#             elif choice == 2:
-#                 rfsoc1.config_hardware("192.168.3.50", "192.168.3.51", "A0CEC8B0C852")
-#             elif choice == 3:
-#                 rfsoc1.set_tone_list(1, )
-#             elif choice == 4:
-#                 freqs_up = -1.0*np.linspace(251.0e6,1.0e6,500)
-#                 freqs_lw = 1.0*np.linspace(2.25e6,252.25e6,500)
-#                 freqs = np.append(freqs_up,freqs_lw)
-#                 rfsoc1.set_tone_list(2, freqs, np.ones(1000))
-#             elif choice == 5:
-#                 rfsoc2.upload_bitstream("DualChannel-240605.bit")
-#             elif choice == 6:
-#                 rfsoc2.config_hardware("192.168.3.52", "192.168.3.53", "A0CEC8B0C852")
-#             elif choice == 7:
-#                 rfsoc2.set_tone_list(1, [106.6e6, 111.115e6], [1, 1])
-#             elif choice == 8:
-#                 freqs_up = -1.0*np.linspace(251.0e6,1.0e6,500)
-#                 freqs_lw = 1.0*np.linspace(2.25e6,252.25e6,500)
-#                 freqs = np.append(freqs_up,freqs_lw)
-#                 rfsoc2.set_tone_list(2, freqs, np.ones(1000))
-#             elif choice == 9:
-#                 rfsoc3.upload_bitstream("DualChannel-240605.bit")
-#             elif choice == 10:
-#                 rfsoc3.config_hardware("192.168.3.54", "192.168.3.55", "A0CEC8B0C852")
-#             elif choice == 11:
-#                 rfsoc3.set_tone_list(1, [106.6e6, 111.115e6], [1, 1])
-#             elif choice == 12:
-#                 freqs_up = -1.0*np.linspace(251.0e6,1.0e6,500)
-#                 freqs_lw = 1.0*np.linspace(2.25e6,252.25e6,500)
-#                 freqs = np.append(freqs_up,freqs_lw)
-#                 rfsoc3.set_tone_list(2, freqs, np.ones(1000))
-#             else:
-#                 print("Invalid choice")
-#
-#             os.system("sleep 3; clear")
-#     except KeyboardInterrupt:
-#         print("Exiting the program")
-#         exit(0)
+            else:
+                print("Invalid choice")
+            # os.system("sleep 3; clear")
+    except KeyboardInterrupt:
+        print("\nExiting the program")
+        exit(0)
+
 
 
 if __name__ == "__main__":
-    main()
+    oldmain()

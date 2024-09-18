@@ -173,15 +173,15 @@ class RFSOC:
             log.warning("bad mac address, expected 12 characters")
             return False
         data = {}
-        data["data_a_srcip"] = hex(int(ipaddress.IPv4Address(data_a_srcip)))
-        data["data_b_srcip"] = hex(int(ipaddress.IPv4Address(data_b_srcip)))
-        data["data_a_dstip"] = hex(int(ipaddress.IPv4Address(data_a_dstip)))
-        data["data_b_dstip"] = hex(int(ipaddress.IPv4Address(data_b_dstip)))
+        data["data_b_srcip"] = data_b_srcip
+        data["data_a_dstip"] = data_a_dstip
+        data["data_b_dstip"] = data_b_dstip
+        data["data_a_srcip"] = data_a_srcip
         data["destmac_a_msb"] = dstmac_a[:8]
         data["destmac_a_lsb"] = dstmac_a[8:]
         data["destmac_b_msb"] = dstmac_b[:8]
         data["destmac_b_lsb"] = dstmac_b[8:]
-        data["port_b"] = port_a
+        data["port_a"] = port_a
         data["port_b"] = port_b
 
         response = RFSOC.rcon.issue_command(self.name, "config_hardware", data, 10)

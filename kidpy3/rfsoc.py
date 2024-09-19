@@ -27,8 +27,8 @@ class RedisConnection:
 
     """
 
-    def __init__(self) -> None:
-        self.r = redis.Redis(host=HOST, port=PORT)
+    def __init__(self, host, port) -> None:
+        self.r = redis.Redis(host=host, port=port)
 
         if self.is_connected():
             self.pubsub = self.r.pubsub()
@@ -124,7 +124,6 @@ class RedisConnection:
 
 
 class RFSOC:
-    rcon = RedisConnection()
 
     def __init__(self, redis_ip, rfsoc_name) -> None:
         """Bread and butter of the RFSOC object. This is the main object that facilitates control over the readout system.
@@ -139,11 +138,12 @@ class RFSOC:
         self._ch1 = rfchannel()
         self._ch2 = rfchannel()
 
+        self.rcon = RedisConnection(redis_ip, PORT)
     def upload_bitstream(self, path: str):
         """Command the RFSoC to upload(or reupload) it's FPGA Firmware"""
         assert isinstance(path, str) == True, "Path should be a string"
         args = {"abs_bitstream_path": path}
-        response = RFSOC.rcon.issue_command(self.name, "upload_bitstream", args, 20)
+        response = self.rcon.issue_command(self.name, "upload_bitstream", args, 20)
         if response is None:
             log.error("upload_bitstream failed")
             return
@@ -184,7 +184,7 @@ class RFSOC:
         data["port_a"] = port_a
         data["port_b"] = port_b
 
-        response = RFSOC.rcon.issue_command(self.name, "config_hardware", data, 10)
+        response = self.rcon.issue_command(self.name, "config_hardware", data, 10)
         if response is None:
             log.error("config_hardware failed")
             return False
@@ -230,7 +230,7 @@ class RFSOC:
             log.error(f"Invalid channel number {chan}")
             return
 
-        response = RFSOC.rcon.issue_command(self.name, "set_tone_list", data, 10)
+        response = self.rcon.issue_command(self.name, "set_tone_list", data, 10)
         if response is None:
             log.error("set_tone_list failed")
             return
@@ -250,7 +250,7 @@ class RFSOC:
 
         """
         data = {"channel": chan}
-        response = RFSOC.rcon.issue_command(self.name, "get_tone_list", data, 10)
+        response = self.rcon.issue_command(self.name, "get_tone_list", data, 10)
         if response is None:
             log.error("get_tone_list failed")
         else:

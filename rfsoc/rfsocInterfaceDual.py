@@ -35,7 +35,7 @@ def uploadOverlay(overlayPath: str):
 
 
 def configure_registers(dataA_srcip: int, dataB_srcip: int, dataA_dstip: int, dataB_dstip: int, dstmac_a_msb: int,
-                        dstmac_b_lsb: int, portA: int, portB: int):
+                        dstmac_a_lsb: int,dstmac_b_msb: int,dstmac_b_lsb: int, portA: int, portB: int):
     # SET ETHERNET IPS and MACS
     def ethRegsPortWrite(
         eth_regs,
@@ -59,14 +59,14 @@ def configure_registers(dataA_srcip: int, dataB_srcip: int, dataA_dstip: int, da
         src_ip_int32=dataA_srcip,
         dst_ip_int32=dataA_dstip,
         dst_mac1_int32=dstmac_a_msb,
-        dst_mac0_int16=dstmac_b_lsb,
+        dst_mac0_int16=dstmac_a_lsb,
         port=portA
     )  # OPSERO PORT 3, CHAN 1
     ethRegsPortWrite(
         firmware.ethWrapPort1.eth_regs_0,
         src_ip_int32=dataB_srcip,
         dst_ip_int32=dataB_dstip,
-        dst_mac1_int32=dstmac_a_msb,
+        dst_mac1_int32=dstmac_b_msb,
         dst_mac0_int16=dstmac_b_lsb,
         port=portB
     )  # OPSERO PORT 2, CHAN 2

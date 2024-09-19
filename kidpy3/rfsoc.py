@@ -27,8 +27,8 @@ class RedisConnection:
 
     """
 
-    def __init__(self) -> None:
-        self.r = redis.Redis(host=HOST, port=PORT)
+    def __init__(self, host, port) -> None:
+        self.r = redis.Redis(host=host, port=port)
 
         if self.is_connected():
             self.pubsub = self.r.pubsub()
@@ -124,7 +124,6 @@ class RedisConnection:
 
 
 class RFSOC:
-    rcon = RedisConnection()
 
     def __init__(self, redis_ip, rfsoc_name) -> None:
         """Bread and butter of the RFSOC object. This is the main object that facilitates control over the readout system.
@@ -139,6 +138,7 @@ class RFSOC:
         self._ch1 = rfchannel()
         self._ch2 = rfchannel()
 
+        self.rcon = RedisConnection(redis_ip, PORT)
     def upload_bitstream(self, path: str):
         """Command the RFSoC to upload(or reupload) it's FPGA Firmware"""
         assert isinstance(path, str) == True, "Path should be a string"

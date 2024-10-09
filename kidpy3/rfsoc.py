@@ -1,17 +1,27 @@
+"""
+@authors
+    - Cody Roberson <carobers@asu.edu>
+@date 20241009
+
+Information
+-----------
+
+The RFSOC class is the interface between the user's program and the operation of the readout system. The RFSOC class
+reads a user configured yml file based on the included rfsoc_config_default.yml.
+"""
 import numpy as np
 import logging
 from uuid import uuid4
 import redis
 import json
 import ipaddress
+from omegaconf import OmegaConf
 
 __all__ = [
     'RFSOC',
     'rfchannel'
 ]
 
-HOST = "192.168.2.10"
-PORT = 6379
 log = logging.getLogger(__name__)
 
 
@@ -124,22 +134,38 @@ class RedisConnection:
 
 
 class RFSOC:
-
-    def __init__(self, redis_ip, rfsoc_name) -> None:
-        """Bread and butter of the RFSOC object. This is the main object that facilitates control over the readout system.
-
-        :param redis_ip: _description_
-        :type redis_ip: _type_
-        :param rfsoc_number: _description_
-        :type rfsoc_number: _type_
+    def __init__(self, yaml_cfg: str ) -> None:
+        """This is the key interface between the User's commands and the responding RFSOC system.
         """
+
+        # First, we pull in our config and assign it to variables
+        try:
+            self.config = OmegaConf.load(yaml_cfg).rfsoc_config
+            rfsoc_name = self.config.rfsoc_name
+            redis_ip = self.config.redis_ip
+            redis_port = int(self.config.redis_port)
+            bitstream = self.config.bitstream
+        except FileNotFoundError:
+            log.error("Config file not found, this is required for operation.")
+        except OmegaConf.ConfigAttributeError as e:
+            log.error(f"Expected a parameter to be present in the config file however, it was not found."
+                      f"Is it missing or is there a typo?")
+            raise e
+
         log.debug(f"rfsoc object created {rfsoc_name} {redis_ip}")
         self.name = rfsoc_name
         self._ch1 = rfchannel()
         self._ch2 = rfchannel()
 
-        self.rcon = RedisConnection(redis_ip, PORT)
-    def upload_bitstream(self, path: str):
+        self.rcon = RedisConnection(redis_ip, redis_port)
+
+        # Next we'll upload a bitstream
+        self.__upload_bitstream(bitstream)
+
+        # Finally, we'll configure the hardware
+        self.__config_hardware()
+
+    def __upload_bitstream(self, path: str):
         """Command the RFSoC to upload(or reupload) it's FPGA Firmware"""
         assert isinstance(path, str) == True, "Path should be a string"
         args = {"abs_bitstream_path": path}
@@ -150,8 +176,7 @@ class RFSOC:
         log.info("upload_bitstream success")
         return
 
-    def config_hardware(self, data_a_srcip: str, data_b_srcip: str, data_a_dstip: str, data_b_dstip: str, dstmac_a: str,
-                        dstmac_b: str = None, port_a: int = 4096, port_b: int = 4096) -> bool:
+    def __config_hardware(self) -> bool:
         """
         Configure the network parameters on the RFSOC
         :param data_a_srcip: Source IP for data A (channel 1)
@@ -168,29 +193,26 @@ class RFSOC:
             Note: this is used as both source and destination ports
         :return:
         """
-
-        if len(dstmac_a) != 12:
-            log.warning("bad mac address, expected 12 characters")
-            return False
+        eth = self.config.ethernet_config
         data = {}
-        data["data_b_srcip"] = data_b_srcip
-        data["data_a_dstip"] = data_a_dstip
-        data["data_b_dstip"] = data_b_dstip
-        data["data_a_srcip"] = data_a_srcip
-        data["destmac_a_msb"] = dstmac_a[:8]
-        data["destmac_a_lsb"] = dstmac_a[8:]
-        data["destmac_b_msb"] = dstmac_b[:8]
-        data["destmac_b_lsb"] = dstmac_b[8:]
-        data["port_a"] = port_a
-        data["port_b"] = port_b
+        data["data_a_srcip"] = eth.udp_data_a_sourceip
+        data["data_a_dstip"] = eth.udp_data_a_destip
+        data["data_b_dstip"] = eth.udp_data_b_sourceip
+        data["data_b_srcip"] = eth.udp_data_b_destip
+        data["destmac_a_msb"] = eth.destmac_a[:8]
+        data["destmac_a_lsb"] = eth.destmac_a[8:]
+        data["destmac_b_msb"] = eth.destmac_b[:8]
+        data["destmac_b_lsb"] = eth.destmac_b[8:]
+        data["port_a"] = eth.port_a
+        data["port_b"] = eth.port_b
 
         response = self.rcon.issue_command(self.name, "config_hardware", data, 10)
         if response is None:
             log.error("config_hardware failed")
             return False
         log.info("config_hardware success")
-        self._ch1.port = port_a
-        self._ch2.port = port_b
+        self._ch1.port = eth.port_a
+        self._ch2.port = eth.port_b
         return True
 
     def set_tone_list(self, chan=1, tonelist=[], amplitudes=[]):

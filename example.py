@@ -8,16 +8,15 @@ This is an example of how to use the kidpy3 package to control the RFSOC.
 """
 import kidpy3 as kp3
 import numpy as np
-import valon5009 as valon
-import os
+import extra_hardware.valon5009.valon as valon
 # import matplotlib.pyplot as plt
-import transceiver_serialdriver as ts
+import extra_hardware.transceiver320_d.transceiver as ts
 from kidpy3.udp2 import udpcap
 
 
 CONTROLS = {
-    1 : "Upload bitstream to rfsoc1",
-    2 : "Configure hardware on rfsoc1",
+    1 : "<DISABLED> Upload bitstream to rfsoc1",
+    2 : "<>Configure hardware on rfsoc1",
     3 : "Set Chan1 rfsoc1 to a full comb",
     4 : "LO Sweep",
     5 : "set lo to 1000 MHz",
@@ -31,7 +30,7 @@ def oldmain():
     """
 
     """
-    r1 = kp3.RFSOC("192.168.2.10", 'rfsoc1')
+    r1 = kp3.RFSOC("./rfsoc_config_default.yml")
     freqs_up = -1.0 * np.linspace(241.0e6, 1.0e6, 430)
     freqs_lw = 1.0 * np.linspace(2.25e6, 242.25e6, 453)
     freqs = np.append(freqs_up, freqs_lw)
@@ -55,13 +54,7 @@ def oldmain():
                 print(f"{opt} : {CONTROLS[opt]}")
 
             choice = int(input("Enter the option number: "))
-            if choice == 1:
-                r1.upload_bitstream("last_horizon_20231203-0038.bit")
-            elif choice == 2:
-                r1.config_hardware("192.168.3.41", "192.168.4.41", "192.168.3.40",
-                                   "192.168.4.40", "681CA2123652", "681CA2123652", 4096,
-                                   4096)
-            elif choice == 3:
+            if choice == 3:
                 r1.set_tone_list(1, freqs, np.ones_like(freqs))
             elif choice == 4:
                 kp3.science.loSweep(lo_source, port, freqs, 1000, N_steps=500,

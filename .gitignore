@@ -3,3 +3,4 @@
 docs/_*
 *.log
 __pycache__/
+virtenv

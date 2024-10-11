@@ -210,7 +210,6 @@ class RawDataFile:
         self.lo_freq[0] = chan.lo_freq
 
         # ONR specific params below this line
-        # TODO: KILL THIS WITH FIRE
         # that appends these datafields based on file name
 
         # In kidpy, the user shall call a function along the lines of

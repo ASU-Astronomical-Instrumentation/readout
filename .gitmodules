@@ -1,0 +1,6 @@
+[submodule "hardware/transceiver321"]
+	path = hardware/transceiver321
+	url = https://github.com/asu-rdl/transceiver321
+[submodule "hardware/transceiver3.2.0-dualsystem"]
+	path = hardware/transceiver320_dual
+	url = https://github.com/asu-rdl/transceiver3.2.0-dualsystem.git

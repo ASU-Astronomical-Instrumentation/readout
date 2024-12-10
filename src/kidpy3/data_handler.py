@@ -27,7 +27,8 @@ import os
 import logging
 import numpy as np
 from datetime import date
-from .rfsoc import rfchannel
+from omegaconf import OmegaConf
+from dataclasses import dataclass
 import glob
 
 logger = logging.getLogger(__name__)
@@ -56,8 +57,6 @@ class RawDataFile:
          .. DANGER::
             Opening with 'w' unintentionally can cause data loss, especially if users are accustomed to
             the w+ file mode
-
-
 
     """
 
@@ -197,20 +196,19 @@ class RawDataFile:
         self.adc_q.resize((1024, n_sample))
         self.timestamp.resize((n_sample,))
 
-    def set_global_data(self, chan: rfchannel):
-        self.attenuator_settings[:] = chan.attenuator_settings
-        self.baseband_freqs[:] = chan.baseband_freqs
-        self.sample_rate[0] = chan.sample_rate
-        self.tile_number[:] = chan.tile_number
-        self.tone_powers[:] = chan.tone_powers
-        self.tile_number[0] = chan.tile_number
-        self.rfsoc_number[0] = chan.rfsoc_number
-        self.ifslice_number[0] = chan.ifslice_number
-        self.n_attenuators[0] = chan.n_attenuators
-        self.lo_freq[0] = chan.lo_freq
+    # def set_global_data(self, chan: rfchannel):
+    #     self.attenuator_settings[:] = chan.attenuator_settings
+    #     self.baseband_freqs[:] = chan.baseband_freqs
+    #     self.sample_rate[0] = chan.sample_rate
+    #     self.tile_number[:] = chan.tile_number
+    #     self.tone_powers[:] = chan.tone_powers
+    #     self.tile_number[0] = chan.tile_number
+    #     self.rfsoc_number[0] = chan.rfsoc_number
+    #     self.ifslice_number[0] = chan.ifslice_number
+    #     self.n_attenuators[0] = chan.n_attenuators
+    #     self.lo_freq[0] = chan.lo_freq
 
         # ONR specific params below this line
-        # TODO: KILL THIS WITH FIRE
         # that appends these datafields based on file name
 
         # In kidpy, the user shall call a function along the lines of
@@ -403,19 +401,20 @@ def gen_read(h5: str):
     f = h5py.File(h5, "r")
     rf = open("rawdatafilereadfunction.txt", "w")  # overwrites, previous
 
-    def somefunc(name, object):
+    def read_and_write_property(name, object):
         if isinstance(object, h5py.Dataset):
             prop = object.name.split("/").pop()
             rf.write(f"if '{object.name}' in self.fh:\n")
             rf.write(f"    self.{prop} = self.fh['{object.name}']\n")
             rf.write(f"else:\n")
-            rf.write(f"    self.{prop} = None\n\n")
+            rf.write(f"    self.{prop} = None\n")
+            rf.write(f"    log.warning('Expected {object.name} however it was not found.')\n\n")
 
     for k, v in f.items():
         if isinstance(v, h5py.Dataset):
             pass
         elif isinstance(v, h5py.Group):
-            v.visititems(somefunc)
+            v.visititems(read_and_write_property)
     rf.close()
 
 
@@ -509,7 +508,64 @@ def get_last_rdf(name: str):
     g.sort()
     return g[-1]
 
+@dataclass
+class Rfchan:
+    name: str = "undefined channame"
+    raw_filename: str = "./data.hdf5"
+    baseband_freqs = []
+    tone_powers= []
+    attenuator_settings = (0.0, 0.0)
+    n_tones:int = 0
+    n_sample:int = 488
+    n_attenuators:int = 2
+    sample_rate:float = 488.0
+    tile_number: int = 0
+    chan_number:int = 0 
+    ifslice_number:int = 0
+    lo_sweep_filename: str = ""
+    n_fftbins: int = 1024
+    lo_freq: float = 0.0
+    port: int = 0
+    ip : str= ""
 
-# 20230731_TOD_set1002
-if __name__ == "__main__":
-    pass
+    def upload_to_redis(self):
+        raise NotImplementedError("Planned feature; not implemented")
+    
+    def save(self):
+        raise NotImplementedError("Planned feature; not implemented")
+
+
+        
+def generate_config(path=""):
+    default_cfg = OmegaConf.create()
+    default_cfg.rfsoc_config = {}
+    default_cfg.rfsoc_config.ethernet_config = {}
+    default_cfg.rf1 = {}
+    default_cfg.rf2 = {}
+
+    default_cfg.rfsoc_config.rfsoc_name = "PLACEHOLDER"
+    default_cfg.rfsoc_config.redis_ip = "127.0.0.1"
+    default_cfg.rfsoc_config.redis_port = 6379
+    default_cfg.rfsoc_config.bitstream = "/home/Xilinx/dualchan_v2.bit"
+    default_cfg.rfsoc_config.ethernet_config.udp_data_a_sourceip = '192.168.3.41'
+    default_cfg.rfsoc_config.ethernet_config.udp_data_b_sourceip = '192.168.4.41'
+    default_cfg.rfsoc_config.ethernet_config.udp_data_a_destip = '192.168.3.40'
+    default_cfg.rfsoc_config.ethernet_config.udp_data_b_destip = '192.168.4.40'
+    default_cfg.rfsoc_config.ethernet_config.destmac_a = '681CA2123652'
+    default_cfg.rfsoc_config.ethernet_config.destmac_b = '681CA2123652'
+    default_cfg.rfsoc_config.ethernet_config.port_a = 4096
+    default_cfg.rfsoc_config.ethernet_config.port_b = 4096
+
+    default_cfg.rf1.raw_filename = ""
+    default_cfg.rf1.ip = "${rfsoc_config.ethernet_config.udp_data_a_destip}"
+    default_cfg.rf1.port = "${rfsoc_config.ethernet_config.port_a}"
+
+
+    default_cfg.rf2.raw_filename = ""
+    default_cfg.rf2.ip = "${rfsoc_config.ethernet_config.udp_data_b_destip}"
+    default_cfg.rf2.port = "${rfsoc_config.ethernet_config.port_b}"
+
+    if path != "":
+        OmegaConf.save(default_cfg, path)
+
+    return default_cfg

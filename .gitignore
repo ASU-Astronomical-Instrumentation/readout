@@ -3,3 +3,8 @@
 docs/_*
 *.log
 __pycache__/
+virtenv
+.idea
+conf.py
+testconf.yml
+kidpy3/TODO

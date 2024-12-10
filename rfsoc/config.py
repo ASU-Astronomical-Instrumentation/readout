@@ -29,7 +29,7 @@ class ConfigData:
     Serves as the struct/container of our config.
     """
 
-    rfsocName: str = "NameGoesHere"
+    rfsocName: str = "devrfsoc"
     crash_on_noconnection: bool = "False"
     redis_host: str = "192.168.2.10"
     redis_port: str = "6379"

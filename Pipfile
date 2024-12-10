@@ -1,0 +1,18 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+scipy = "*"
+omegaconf = "*"
+matplotlib = "*"
+numpy = "*"
+redis = "*"
+h5py = "*"
+pytest = "*"
+pytest-html = "*"
+
+[dev-packages]
+build = "*"
+setuptools = "*"

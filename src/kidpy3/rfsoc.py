@@ -14,12 +14,13 @@ import logging
 from uuid import uuid4
 import redis
 import json
-import ipaddress
-from omegaconf import OmegaConf
+import os
+from omegaconf import OmegaConf, omegaconf
+from .data_handler import generate_config
+from .data_handler import Rfchan
 
 __all__ = [
     'RFSOC',
-    'rfchannel'
 ]
 
 log = logging.getLogger(__name__)
@@ -42,7 +43,7 @@ class RedisConnection:
 
         if self.is_connected():
             self.pubsub = self.r.pubsub()
-            self.pubsub.subscribe("REPLY")
+            self.pubsub.subscribe("REPLY") # TODO: Check if this needs to be unique.
             log.debug(self.pubsub.get_message(timeout=1))
 
     def is_connected(self):
@@ -133,42 +134,63 @@ class RedisConnection:
             return
 
 
+
 class RFSOC:
-    def __init__(self, yaml_cfg: str ) -> None:
+    def __init__(self, yaml_file: str ) -> None:
         """This is the key interface between the User's commands and the responding RFSOC system.
+        A yaml file must be specified in the path. If the file in the given path does not exist, one
+        will be created.
         """
+        assert yaml_file is not None, "Please provide a valid yml file path even if it doesn't yet exist."
 
-        # First, we pull in our config and assign it to variables
-        try:
-            self.config = OmegaConf.load(yaml_cfg).rfsoc_config
-            rfsoc_name = self.config.rfsoc_name
-            redis_ip = self.config.redis_ip
-            redis_port = int(self.config.redis_port)
-            bitstream = self.config.bitstream
-        except FileNotFoundError:
-            log.error("Config file not found, this is required for operation.")
-        except OmegaConf.ConfigAttributeError as e:
-            log.error(f"Expected a parameter to be present in the config file however, it was not found."
-                      f"Is it missing or is there a typo?")
-            raise e
+        if not os.path.exists(yaml_file):
+            log.warning("yaml file doesn't exist; one will be created. Please edit it to fill in the relevant details." + 
+                        "then reload the program or call reload_cfg()")
+            self.cfg = generate_config(yaml_file)
+        else:
+            self.cfg = OmegaConf.load(yaml_file)
+            self.yaml_file = yaml_file
+            self.rf1 = Rfchan()
+            self.rf2 = Rfchan()
+            
+            try:
+                self.name = self.cfg.rfsoc_config.rfsoc_name
+                self.eth = self.cfg.rfsoc_config.ethernet_config
+                self.rf1.ip = self.eth.udp_data_a_destip
+                self.rf2.ip = self.eth.udp_data_b_destip
+                self.rf1.port = self.eth.port_a
+                self.rf2.port = self.eth.port_b
+                self.redisip = self.cfg.rfsoc_config.redis_ip
+                self.redisport = self.cfg.rfsoc_config.redis_port
+                self.bitstream = self.cfg.rfsoc_config.bitstream
+            except omegaconf.errors.ConfigAttributeError:
+                log.error("Missing an entry in the YAML config. Please correct the issue or regenerate a new"
+                          "configuration file.")
+            self.rcon = RedisConnection(self.redisip, self.redisport)
 
-        log.debug(f"rfsoc object created {rfsoc_name} {redis_ip}")
-        self.name = rfsoc_name
-        self._ch1 = rfchannel()
-        self._ch2 = rfchannel()
+    def reload_cfg(self):
+        """
+            reloads a given config
+        """
+        self.cfg = OmegaConf.load(self.yaml_file)
+        del self.rcon
+        self.redisip = self.cfg.rfsoc_config.redis_ip
+        self.redisport = self.cfg.rfsoc_config.redis_port
+        self.rcon = RedisConnection(self.cfg.rfsoc_config.redis_ip, self.cfg.rfsoc_config.redis_port)
+        self.name = self.cfg.rfsoc_config.rfsoc_name
+        self.eth = self.cfg.rfsoc_config.ethernet_config
+        self.rf1.ip = self.eth.udp_data_a_destip
+        self.rf2.ip = self.eth.udp_data_b_destip
+        self.rf1.port = self.eth.port_a
+        self.rf2.port = self.eth.port_b
+        self.bitstream = self.cfg.rfsoc_config.bitstream
 
-        self.rcon = RedisConnection(redis_ip, redis_port)
 
-        # Next we'll upload a bitstream
-        self.__upload_bitstream(bitstream)
-
-        # Finally, we'll configure the hardware
-        self.__config_hardware()
-
-    def __upload_bitstream(self, path: str):
+# FIXME: We're actually goin go pull this from the yml file
+    def upload_bitstream(self):
         """Command the RFSoC to upload(or reupload) it's FPGA Firmware"""
-        assert isinstance(path, str) == True, "Path should be a string"
-        args = {"abs_bitstream_path": path}
+        
+        args = {"abs_bitstream_path": self.bitstream}
         response = self.rcon.issue_command(self.name, "upload_bitstream", args, 20)
         if response is None:
             log.error("upload_bitstream failed")
@@ -176,56 +198,46 @@ class RFSOC:
         log.info("upload_bitstream success")
         return
 
-    def __config_hardware(self) -> bool:
+    def config_hardware(self) -> bool:
         """
-        Configure the network parameters on the RFSOC
-        :param data_a_srcip: Source IP for data A (channel 1)
-        :type data_a_srcip: str
-            ex: "192.168.3.40"
-        :param data_b_srcip: Source IP for data B (channel 2)
-        :param data_a_dstip: Desintation IP for data A (channel 1)
-        :param data_b_dstip: Desintation IP for data B (channel 2)
-        :param dstmac_a: Destination MAC address data A (channel 1)
-        :param dstmac_b: Destination MAC address data B (channel 2)
-        :param port_a: Data A (channel 1) port
-            Note: this is used as both source and destination ports
-        :param port_b: Data B (channel 2) port
-            Note: this is used as both source and destination ports
-        :return:
+        Configure the network parameters on the RFSOC. 
+        These paremeters are sources from the YAML file provided by the user when the RFSOC object
+        is initialized.
         """
-        eth = self.config.ethernet_config
         data = {}
-        data["data_a_srcip"] = eth.udp_data_a_sourceip
-        data["data_a_dstip"] = eth.udp_data_a_destip
-        data["data_b_dstip"] = eth.udp_data_b_sourceip
-        data["data_b_srcip"] = eth.udp_data_b_destip
-        data["destmac_a_msb"] = eth.destmac_a[:8]
-        data["destmac_a_lsb"] = eth.destmac_a[8:]
-        data["destmac_b_msb"] = eth.destmac_b[:8]
-        data["destmac_b_lsb"] = eth.destmac_b[8:]
-        data["port_a"] = eth.port_a
-        data["port_b"] = eth.port_b
+        data["data_a_srcip"] = self.eth.udp_data_a_sourceip
+        data["data_a_dstip"] = self.eth.udp_data_a_destip
+        data["data_b_dstip"] = self.eth.udp_data_b_sourceip
+        data["data_b_srcip"] = self.eth.udp_data_b_destip
+        data["destmac_a_msb"] = self.eth.destmac_a[:8]
+        data["destmac_a_lsb"] = self.eth.destmac_a[8:]
+        data["destmac_b_msb"] = self.eth.destmac_b[:8]
+        data["destmac_b_lsb"] = self.eth.destmac_b[8:]
+        data["port_a"] = self.eth.port_a
+        data["port_b"] = self.eth.port_b
 
         response = self.rcon.issue_command(self.name, "config_hardware", data, 10)
         if response is None:
             log.error("config_hardware failed")
             return False
         log.info("config_hardware success")
-        self._ch1.port = eth.port_a
-        self._ch2.port = eth.port_b
         return True
 
     def set_tone_list(self, chan=1, tonelist=[], amplitudes=[]):
         """Set a DAC channel to generate a signal from a list of tones
 
-        :param chan: The DAC channel on the RFSoC to set, defaults to 1
-        :type chan: int, optional
+        :param chan: The DAC channel on the RFSoC to set. 
+            Channel 1 is for Dac0 (I), Dac1 (Q)
+            Channel 2 is for Dac2 (I), Dac3 (Q)
+        :type chan: int
         :param tonelist: list of tones in MHz to generate, defaults to []
         :type tonelist: list, optional
         :param amplitudes: list of tone powers per tone, Normalized to 1, defaults to []
         :type amplitudes: list, optional
         """
-
+        assert chan==1 or chan==2, "Expected either channel 1 or channel 2"
+        assert len(tonelist) > 0, "Expected a list of at least 1 frequency"
+        assert len(amplitudes) == len(tonelist), "Expected the amplitude list to have the same length as the tone list"
         f = tonelist
         a = amplitudes
         data = {}
@@ -240,98 +252,50 @@ class RFSOC:
         data["amplitudes"] = a
 
         if chan == 1:
-            self._ch1.baseband_freqs = f
-            self._ch1.tone_powers = a
-            self._ch1.n_tones = len(f)
+            self.rf1.baseband_freqs = f
+            self.rf1.tone_powers = a
+            self.rf1.n_tones = len(f)
 
-        elif chan == 2:
-            self._ch2.baseband_freqs = f
-            self._ch2.tone_powers = a
-            self._ch2.n_tones = len(f)
         else:
-            log.error(f"Invalid channel number {chan}")
-            return
+            self.rf2.baseband_freqs = f
+            self.rf2.tone_powers = a
+            self.rf2.n_tones = len(f)
+
 
         response = self.rcon.issue_command(self.name, "set_tone_list", data, 10)
         if response is None:
             log.error("set_tone_list failed")
             return
 
-    def get_tone_list(self, chan: int = 1):
+    def get_tone_list(self, chan: int = 1) -> tuple[np.ndarray, np.ndarray]:
         """
-        Retrieves the tone list and amplitudes for the specified channel.
+                Retrieves the tone list and amplitudes for the specified channel.
         Note that this function does update the internal state of the rfchannel object. This is to ensure that the
         tones and amplitudes are in sync with the HDF5 data files.
 
-        Args:
-            chan (int): The channel number. Defaults to 1.
-
-        Returns:
-            tuple: A tuple containing the baseband frequencies and tone powers.
-
+        :param chan: The DAC channel on the RFSoC to set.
+        Channel 1 is for Dac0 (I), Dac1 (Q)
+        Channel 2 is for Dac2 (I), Dac3 (Q)
+        :type chan: int
+        :return: A tuple containing the tone list and the amplitude list.
 
         """
         data = {"channel": chan}
         response = self.rcon.issue_command(self.name, "get_tone_list", data, 10)
         if response is None:
             log.error("get_tone_list failed")
+
         else:
             if chan == 1:
-                self._ch1.baseband_freqs = response["tone_list"]
-                self._ch1.tone_powers = response["amplitudes"]
-                self._ch1.n_tones = len(response["tone_list"])
+                self.rf1.baseband_freqs = response["tone_list"]
+                self.rf1.tone_powers = response["amplitudes"]
+                self.rf1.n_tones = len(response["tone_list"])
+                return np.array(self.rf1.baseband_freqs), np.array(self.rf1.tone_powers)
+
             else:
-                self._ch2.baseband_freqs = response["tone_list"]
-                self._ch2.tone_powers = response["amplitudes"]
-                self._ch2.n_tones = len(response["tone_list"])
-
-            log.info(f"get_tone_list success for channel {chan}")
-            return self._ch1.baseband_freqs, self._ch1.tone_powers
+                self.rf2.baseband_freqs = response["tone_list"]
+                self.rf2.tone_powers = response["amplitudes"]
+                self.rf2.n_tones = len(response["tone_list"])
+                return np.array(self.rf2.baseband_freqs), np.array(self.rf2.tone_powers)
 
 
-class rfchannel:
-    def __init__(self) -> None:
-        """
-        Contains the state information relevant to an data collection event.
-        The information used here is pulled into the DataRawDataFile
-
-        :param str raw_filename: path to where the HDF5 file shall exist.
-        :param str ip: ip address of UDP stream to listen to
-        :param int port: port of UDP to listen to, default is 4096
-        :param str name: Friendly Name to call the channel. This is relevant to logs, etc
-        :param int n_sample: n_samples to take. While this is used to format the
-            rawDataFile, it should be
-            left as 0 for now since udp2.capture() dynamically resizes/allocates it's datasets.
-        :param int n_resonator: Number of resonators we're interested in / Tones we're generating
-            from the RFSOC dac mapped to this Channel.
-        :param int n_attenuator: Dimension N Attenuators
-        :param np.ndarray baseband_freqs: array of N resonator tones
-        :param np.ndarray attenuator_settings: Array of N Attenuator settings
-        :param int sample_rate: Data downlink sample rate ~488 Samples/Second
-        :param int tile_number: Which tile this rf channel belongs to
-        :param int rfsoc_number: Which rfsoc unit is used
-        :param int chan_number: channel # of the rfsoc being used
-        :param int ifslice_number: Which IF slice the rfsoc channel # is using.
-        :param str lo_sweep_filename: path to the LO sweep data with which to append to the rawDataFile.
-
-        """
-
-        self.raw_filename = ""
-        self.ip = ""  # udop datastream IP address.
-        self.baseband_freqs = np.empty(2)  # empty ndarray
-        self.tone_powers = np.empty(2)
-        self.attenuator_settings = (0.0, 0.0)
-        self.n_tones = 0
-
-        self.port = 4096
-        self.name = ""
-        self.n_sample = 488
-        self.n_attenuators = 2
-        self.sample_rate = 488
-        self.tile_number = 0
-        self.rfsoc_number = 0
-        self.chan_number = 0
-        self.ifslice_number = 0
-        self.lo_sweep_filename = ""
-        self.n_fftbins = 1024
-        self.lo_freq = 400.0

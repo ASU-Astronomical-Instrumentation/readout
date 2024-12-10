@@ -1,3 +1,4 @@
+
 """
 Overview
 ________
@@ -12,29 +13,27 @@ Unlike udpcap, udp2 utilizes the hdf5 obervation file format defined by data_han
     Certain typs of variables such as h5py objects or sockets can't be pickled. We therefore have to create the h5py/socket objects we need post-pickle. 
 
 :Authors: Cody Roberson
-:Date: 2024-02-20
+:Date: 2023-08-02
 :Version: 2.0.1
 
 """
 import ctypes
 import logging
 import numpy as np
+import socket
 
-from .rfsoc import RFSOC, rfchannel
+from .data_handler import Rfchan
 from .data_handler import RawDataFile
-from .data_handler import get_last_lo
 import socket
 import time
 import multiprocessing as mp
 
-RED = "\033[0;31m"
-NC = "\033[0m"  # No Color
+RED='\033[0;31m'
+NC='\033[0m' # No Color
 
 logger = logging.getLogger(__name__)
 
-__all__ = ['capture']
-
-def _data_writer_process(dataqueue, chan: rfchannel, runFlag):
+def __data_writer_process(dataqueue, chan: Rfchan, runFlag):
     """
     Creates a RawDataFile and populates it with data that is passed to it through
     the dataqueue parameter. This function runs indefinitely until
@@ -47,20 +46,22 @@ def _data_writer_process(dataqueue, chan: rfchannel, runFlag):
 
     # Create HDF5 Datafile and populate various fields
     try:
-        raw = RawDataFile(chan.raw_filename, "w")
+        raw = RawDataFile(chan.raw_filename, 'w')
         raw.format(chan.n_sample, chan.n_tones, chan.n_fftbins)
-        raw.set_global_data(chan)
+        # raw.set_global_data(chan)
     except Exception as e:
-        errorstr = RED + str(e) + NC
+        errorstr = RED+str(e)+NC
         log.exception(errorstr)
         return
         # raise e
     # Pass in the last LO sweep here
     if chan.lo_sweep_filename == "":
-        raw.append_lo_sweep(get_last_lo(chan.name))
+        # raw.append_lo_sweep(get_last_lo(chan.name))
+        pass
     else:
-        raw.append_lo_sweep(chan.lo_sweep_filename)
+        # raw.append_lo_sweep(chan.lo_sweep_filename)
 
+        pass
     while True:
         # we're done if the queue closes or we don't get any day within 5 seconds
         try:
@@ -87,10 +88,9 @@ def _data_writer_process(dataqueue, chan: rfchannel, runFlag):
 
     raw.close()
     log.debug(f"Queue closed, closing file and exiting for <{chan.name}>")
-    # log.warning("Keyboard Interrupt Caught. This terminates processes that may be writing to a file. Expect possible hdf5 data corruption")
+    #log.warning("Keyboard Interrupt Caught. This terminates processes that may be writing to a file. Expect possible hdf5 data corruption")
 
-
-def _data_collector_process(dataqueue, chan: rfchannel, runFlag):
+def __data_collector_process(dataqueue, chan: Rfchan, runFlag):
     """
     Creates a socket connection and collects udp data. Said data is put in a tuple and
     passed to it's partner data writer process through the queue. When collection ends, None is possed into the
@@ -100,7 +100,6 @@ def _data_collector_process(dataqueue, chan: rfchannel, runFlag):
 
     """
     import time
-
     log = logger.getChild(__name__)
     log.debug(f"began data collector process <{chan.name}>")
     # Creae Socket
@@ -110,7 +109,7 @@ def _data_collector_process(dataqueue, chan: rfchannel, runFlag):
         s.settimeout(10)
     except Exception as e:
         dataqueue.put(None)
-        errorstr = RED + str(e) + NC
+        errorstr = RED+str(e)+NC
         log.exception(errorstr)
         return
     # log.debug(f"Socket bound - <{chan.name}>")
@@ -130,7 +129,7 @@ def _data_collector_process(dataqueue, chan: rfchannel, runFlag):
             for k in range(488):
                 data = s.recv(8208 * 1)
                 datarray = bytearray(data)
-                spec_data = np.frombuffer(datarray, dtype="<i")
+                spec_data = np.frombuffer(datarray, dtype = '<i')
                 i[:, k] = spec_data[0::2][0:1024]
                 q[:, k] = spec_data[1::2][0:1024]
                 ts[k] = time.time()
@@ -147,12 +146,69 @@ def _data_collector_process(dataqueue, chan: rfchannel, runFlag):
     s.close()
     return
 
-
-def exception_callback(e: Exception):
+def exceptionCallback(e: Exception):
     log = logger.getChild(__name__)
     log.error(str(e))
     raise e
 
+def capture2(channels: list, fn, *args, **kwargs):
+    """
+    """
+    user_fn_ret = None
+    with mp.Pool() as pool:
+        
+        # runFlag = mp.Manager.Value(ctypes.c_bool, True)
+        runFlag = True
+        for chan in channels:
+            q = mp.Queue()
+            pool.apply_async(__data_writer_process, (q, chan, runFlag))
+            pool.apply_async(__data_collector_process, (q, chan, runFlag))
+        user_fn_ret = fn(*args, **kwargs)
+        pool.close()
+    return user_fn_ret
+
+def capture(channel: Rfchan, n_packets: int):
+    """
+    Captures to memmory instead of to a file, returning the result.
+    Usefull for developing functions like LO sweep
+    """
+    soc = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        soc.bind((channel.ip, channel.port))
+    except socket.error: 
+        log.error("Tried to bind to the socket but failed. It may already be in use or the address/port"+
+                  "in question is invalid. The ethernet port could otherwise be disconnected as well")
+    
+    def parse_packet(self):
+        try:
+            soc.timeout(1)
+            data = soc.recv(8208 * 1)
+            if len(data) <  8000:
+                print("invalid packet recieved")
+                return
+            datarray = bytearray(data)
+            
+            # now allow a shift of the bytes
+            spec_data = np.frombuffer(datarray, dtype = '<i')
+            # offset allows a shift in the bytes
+            return spec_data # int32 data type
+        except socket.timeout:
+            log.error("The socket timed out and we couldn't obtain data. There are a few diagnostics:"+
+                      "\n1. Is the FPGA programmed and generating tones?"+
+                      "\n2. Is the mac address for this channel correct?"+
+                      "\n3. In the OS, is an MTU of 9000 set for this ethernet interface?"+
+                      "\n4. Are both the Ip source and destination addresses correct?")
+    
+    packets = np.zeros(shape=(2052, n_packets))
+
+    for i in range(n_packets):
+        data_2 = parse_packet()
+        packets[:,i] = data_2 
+        if i%488 == 0:
+            print("{}/{} captured ({:.3f}% Complete)".format(i, n_packets,
+                                                                (n_packets / 488) * 100.0))
+    soc.close()
+    return packets
 
 def capture(channels: list, fn=None, *args, **kwargs):
     """
@@ -188,27 +244,27 @@ def capture(channels: list, fn=None, *args, **kwargs):
     The following spawns a data read/writer pair for rfsoc and waits 30 seconds.
 
     .. code::
-
+        
         # Example 1 Usage
         bb = self.get_last_flist()
-        rfsoc1 = data_handler.RFChannel(savefile, "192.168.5.40",
+        rfsoc1 = data_handler.RFChannel(savefile, "192.168.5.40", 
                                         4096, "rfsoc1", baseband_freqs=bb,
-                                        tone_powers=self.get_last_alist(),
+                                        tone_powers=self.get_last_alist(), 
                                         n_resonator=len(bb), attenuator_settings=np.array([20.0, 10.0]),
-                                        tile_number=1, rfsoc_number=1,
+                                        tile_number=1, rfsoc_number=1, 
                                         lo_sweep_filename=data_handler.get_last_lo("rfsoc1"))
-        rfsoc2 = data_handler.RFChannel(savefile, "192.168.6.40",
+        rfsoc2 = data_handler.RFChannel(savefile, "192.168.6.40", 
                                         4096, "rfsoc1", baseband_freqs=bb,
-                                        tone_powers=self.get_last_alist(),
+                                        tone_powers=self.get_last_alist(), 
                                         n_resonator=len(bb), attenuator_settings=np.array([20.0, 10.0]),
-                                        tile_number=1, rfsoc_number=1,
+                                        tile_number=1, rfsoc_number=1, 
                                         lo_sweep_filename=data_handler.get_last_lo("rfsoc1"))
-
+        
         udp2.capture([rfsoc1, rfsoc2], time.sleep, 30)
 
         # Example 2 usage
         udp2.capture([rfsoc1],motor.AZ_scan_mode,0.0,10.0,savefile,n_repeats=2,position_return=True)
-
+        
     """
     log = logger.getChild(__name__)
 
@@ -226,15 +282,15 @@ def capture(channels: list, fn=None, *args, **kwargs):
     for chan in channels:
         dataqueue = manager.Queue()
         pool.apply_async(
-            _data_writer_process,
+            __data_writer_process,
             (dataqueue, chan, runFlag),
-            error_callback=exception_callback,
+            error_callback=exceptionCallback,
         )
         log.debug(f"Spawned data collector process: {chan.name}")
         pool.apply_async(
-            _data_collector_process,
+            __data_collector_process,
             (dataqueue, chan, runFlag),
-            error_callback=exception_callback,
+            error_callback=exceptionCallback,
         )
         log.debug(f"Spawned data writer process: {chan.name}")
 
@@ -248,7 +304,7 @@ def capture(channels: list, fn=None, *args, **kwargs):
             pool.join()
         except Exception as e:
             log.error("While calling fn, an exception occured")
-            errorstr = RED + str(e) + NC
+            errorstr = RED+str(e)+NC
             log.exception(errorstr)
             pool.terminate()
             pool.join()
@@ -260,7 +316,7 @@ def capture(channels: list, fn=None, *args, **kwargs):
     try:
         pool.join()
     except KeyboardInterrupt:
-        errorstr = RED + str(e) + NC
+        errorstr = RED+str(e)+NC
         log.exception(errorstr)
         pool.terminate()
         pool.join()
@@ -268,51 +324,32 @@ def capture(channels: list, fn=None, *args, **kwargs):
     log.info("Capture finished")
 
 
-
-class udpcap():
-    def __init__(self, UDP_IP = "192.168.3.40", UDP_PORT = 4096):
-        self.UDP_IP = UDP_IP
-        self.UDP_PORT = UDP_PORT
-        print(self.UDP_IP)
-        print(self.UDP_PORT)
-
-
-    def bindSocket(self):
-        self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.sock.bind((self.UDP_IP,self.UDP_PORT))
-
-
-    def parse_packet(self):
-        data = self.sock.recv(8208 * 1)
-        if len(data) <  8000:
-            print("invalid packet recieved")
-            return
-        datarray = bytearray(data)
-        
-        # now allow a shift of the bytes
-        spec_data = np.frombuffer(datarray, dtype = '<i')
-        # offset allows a shift in the bytes
-        return spec_data # int32 data type
-
-
-    def capture_packets(self, n_packets):
-        """
-        DEPRECATED
-        """
-        packets = np.zeros(shape=(2052, n_packets))
-        #packets = np.zeros(shape=(2051,N_packets))
-        counter = 0
-        for i in range(n_packets):
-            data_2 = self.parse_packet()
-            packets[:,i] = data_2 
-            if i%488 == 0:
-                print("{}/{} captured ({:.3f}% Complete)".format(i, n_packets,
-                                                                 (n_packets / 488) * 100.0))
-        return packets
-
-
-
-    def release(self):
-        self.sock.close()
 if __name__ == "__main__":
-    pass
+    """
+    Test routine. Used insitu of a connected RFSOC. For testing, several terminals were opened
+    and each of them would run udp_sender in order to simulate incomming data.
+    ..code:: bash
+        python udp_sender 4096
+    """
+    __LOGFMT = (
+        "%(asctime)s|%(levelname)s|%(filename)s|%(lineno)d|%(funcName)s|%(message)s"
+    )
+    logging.basicConfig(format=__LOGFMT, level=logging.DEBUG)
+    __logh = logging.FileHandler("./udp2.log")
+    logging.root.addHandler(__logh)
+    logger.log(100, __LOGFMT)
+    __logh.flush()
+    __logh.setFormatter(logging.Formatter(__LOGFMT))
+
+    log = logger.getChild(__name__ + ".__main__ test block")
+    # # lets test this thing, shall we?
+    # rfsoc = data_handler.RFChannel(
+    #     "./rfsoc1_fakedata.h5", "127.0.0.1", 4096, "Stuffed Crust Pizza", 488, 1024, 1
+    # )
+    # rfsoc2 = data_handler.RFChannel(
+    #     "./rfsoc2_fakedata.h5", "127.0.0.1", 4097, "Salad", 488, 1024, 1
+    # )
+    # start = time.perf_counter_ns()
+    # capture([rfsoc, rfsoc2], time.sleep, 10)  # wait 10 seconds
+    # stop = time.perf_counter_ns()
+    # log.info(f"capture runtime --> {(stop-start) * 1e-6} ms")

@@ -73,12 +73,17 @@ def upload_bitstream(uuid, data: dict):
     except KeyError:
         err = "missing required parameters"
         log.error(err)
+    except IOError as e:
+        err = f"Could not find specified file, pynq library reports\n{str(e)}"
+        log.error(err)
+    except OSError as e:
+        err = f"Could not find specified file, pynq library reports\n{str(e)}"
+        log.error(err)
     return create_response(status, uuid, error=err)
 
 
 def config_hardware(uuid, data: dict):
     """
-
     :param uuid:
     :param data:
     :return:
@@ -114,6 +119,10 @@ def config_hardware(uuid, data: dict):
 
 
 def set_tone_list(uuid, data: dict):
+    global last_tonelist_chan1
+    global last_tonelist_chan2
+    global last_amplitudes_chan1
+    global last_amplitudes_chan2
     status = False,
     err = ""
     try:
@@ -143,10 +152,12 @@ def set_tone_list(uuid, data: dict):
 
 
 def get_tone_list(uuid, data: dict):
-    global last_tonelist
+    global last_tonelist_chan1
+    global last_tonelist_chan2
+    global last_amplitudes_chan1
+    global last_amplitudes_chan2
     status = False,
     err = ""
-    data = {}
     try:
         chan = int(data["channel"])
         data['channel'] = chan
@@ -181,8 +192,8 @@ def load_config() -> config.GeneralConfig:
 
 def main():
     conf = load_config()
-    name = "rfsoc1"
-    conf.cfg.rfsocName = name
+
+    name = conf.cfg.rfsocName
     crash_on_noconnection = False
     connection = RedisConnection(name, conf.cfg.redis_host, port=conf.cfg.redis_port)
     log.debug("Connection to redis server established")
@@ -228,7 +239,7 @@ def main():
 class RedisConnection:
     def __init__(self, name, host, port) -> None:
         self.r = redis.Redis(host=host, port=port)
-        loopcount = 0;
+        loopcount = 0
         while 1:
             log.info("Attempting to connect to redis server")
             if loopcount > 0:

@@ -12,6 +12,7 @@ redis = "*"
 h5py = "*"
 pytest = "*"
 pytest-html = "*"
+pyserial = "*"
 
 [dev-packages]
 build = "*"

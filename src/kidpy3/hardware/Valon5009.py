@@ -20,7 +20,7 @@ INT_REF = 0
 EXT_REF = 1
 
 
-class Synthesizer:
+class Valon5009:
     """A simple interface to the Valon 5009 synthesizer."""
 
     def __init__(self, port):

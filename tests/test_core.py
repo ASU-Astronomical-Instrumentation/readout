@@ -10,3 +10,4 @@ config.rfsoc_config.redis_ip = "127.0.0.1"
 
 print("Make rfsoc object")
 thingy = kidpy3.RFSOC("mytest.yml")
+

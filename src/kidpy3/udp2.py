@@ -167,7 +167,7 @@ def capture2(channels: list, fn, *args, **kwargs):
         pool.close()
     return user_fn_ret
 
-def capture(channel: Rfchan, n_packets: int):
+def capture_packets(channel: Rfchan, n_packets: int):
     """
     Captures to memmory instead of to a file, returning the result.
     Usefull for developing functions like LO sweep

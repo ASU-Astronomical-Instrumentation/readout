@@ -10,10 +10,13 @@ matplotlib = "*"
 numpy = "*"
 redis = "*"
 h5py = "*"
-pytest = "*"
-pytest-html = "*"
 pyserial = "*"
+
 
 [dev-packages]
 build = "*"
 setuptools = "*"
+pytest = "*"
+pytest-html = "*"
+sphinx = "*"
+sphinx-rtd-theme = "*"

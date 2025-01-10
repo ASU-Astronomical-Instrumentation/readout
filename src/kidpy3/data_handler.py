@@ -22,11 +22,15 @@ The RawDataFile class is analogous to standard camera's raw file. Detector data 
 """
 __all__ = ['RawDataFile']
 
+from typing import Any
+
 import h5py
 import os
 import logging
 import numpy as np
 from datetime import date
+
+import omegaconf
 from omegaconf import OmegaConf
 from dataclasses import dataclass
 import glob
@@ -535,37 +539,5 @@ class Rfchan:
         raise NotImplementedError("Planned feature; not implemented")
 
 
-        
-def generate_config(path=""):
-    default_cfg = OmegaConf.create()
-    default_cfg.rfsoc_config = {}
-    default_cfg.rfsoc_config.ethernet_config = {}
-    default_cfg.rf1 = {}
-    default_cfg.rf2 = {}
-
-    default_cfg.rfsoc_config.rfsoc_name = "PLACEHOLDER"
-    default_cfg.rfsoc_config.redis_ip = "127.0.0.1"
-    default_cfg.rfsoc_config.redis_port = 6379
-    default_cfg.rfsoc_config.bitstream = "/home/Xilinx/dualchan_v2.bit"
-    default_cfg.rfsoc_config.ethernet_config.udp_data_a_sourceip = '192.168.3.41'
-    default_cfg.rfsoc_config.ethernet_config.udp_data_b_sourceip = '192.168.4.41'
-    default_cfg.rfsoc_config.ethernet_config.udp_data_a_destip = '192.168.3.40'
-    default_cfg.rfsoc_config.ethernet_config.udp_data_b_destip = '192.168.4.40'
-    default_cfg.rfsoc_config.ethernet_config.destmac_a = '681CA2123652'
-    default_cfg.rfsoc_config.ethernet_config.destmac_b = '681CA2123652'
-    default_cfg.rfsoc_config.ethernet_config.port_a = 4096
-    default_cfg.rfsoc_config.ethernet_config.port_b = 4096
-
-    default_cfg.rf1.raw_filename = ""
-    default_cfg.rf1.ip = "${rfsoc_config.ethernet_config.udp_data_a_destip}"
-    default_cfg.rf1.port = "${rfsoc_config.ethernet_config.port_a}"
 
 
-    default_cfg.rf2.raw_filename = ""
-    default_cfg.rf2.ip = "${rfsoc_config.ethernet_config.udp_data_b_destip}"
-    default_cfg.rf2.port = "${rfsoc_config.ethernet_config.port_b}"
-
-    if path != "":
-        OmegaConf.save(default_cfg, path)
-
-    return default_cfg

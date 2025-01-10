@@ -9,6 +9,8 @@ Information
 The RFSOC class is the interface between the user's program and the operation of the readout system. The RFSOC class
 reads a user configured yml file based on the included rfsoc_config_default.yml.
 """
+from typing import Any
+
 import numpy as np
 import logging
 from uuid import uuid4
@@ -16,11 +18,13 @@ import redis
 import json
 import os
 from omegaconf import OmegaConf, omegaconf
-from .data_handler import generate_config
+from omegaconf.errors import ConfigKeyError, ConfigAttributeError
+
 from .data_handler import Rfchan
 
 __all__ = [
     'RFSOC',
+    'new_config'
 ]
 
 log = logging.getLogger(__name__)
@@ -134,66 +138,109 @@ class RedisConnection:
             return
 
 
+def new_config(as_dict: bool = False) -> omegaconf.DictConfig | dict[str, Any]:
+    """
+    Creates a new RFSOC Configuration object for the user to fill in. This is the main template for current
+    and future changes to the system configuration. Although the RFSOC class requires an omegaconf object,
+    it makes sense to support a dict as well since it's easy enough to handle.
+
+    :param bool as_dict: (Optional.) If True, return a dict instead of an omegaconf object.
+    :return: The omegaconf object or dictionary as specified by as_dict.
+    """
+    c = {
+        'rfsoc_config': {
+            'ethernet_config': {
+                'udp_data_a_sourceip': '0.0.0.0',
+                'udp_data_b_sourceip': '0.0.0.0',
+                'udp_data_a_destip': '0.0.0.0',
+                'udp_data_b_destip': '0.0.0.0',
+                'destmac_a': 'AABBCCDDEEFF',
+                'destmac_b': 'AABBCCDDEEFF',
+                'port_a': 4096,
+                'port_b': 4096,
+            },
+            'rfsoc_name': 'MATCH_ME_TO_THE_RFSOC',
+            'redis_ip': '127.0.0.1',
+            'redis_port': 6379,
+            'bitstream': '/remote/path/to/bitstream.bit'
+        },
+        'rf1': {
+            'raw_filename': '',
+        },
+        'rf2': {
+            'raw_filename': '',
+        }
+    }
+    if as_dict:
+        return c
+    # Otherwise give us an omegaconf object.
+    return OmegaConf.create(c)
+
 
 class RFSOC:
-    def __init__(self, yaml_file: str ) -> None:
+    def __init__(self, configuration: str | dict[str, Any] | omegaconf.DictConfig):
         """This is the key interface between the User's commands and the responding RFSOC system.
-        A yaml file must be specified in the path. If the file in the given path does not exist, one
-        will be created.
-        """
-        assert yaml_file is not None, "Please provide a valid yml file path even if it doesn't yet exist."
+        Should the user not have a configuration setup, they should use kidpy3.new_config() to generate
+        one. After modifying it, they can use it here.
 
-        if not os.path.exists(yaml_file):
-            log.warning("yaml file doesn't exist; one will be created. Please edit it to fill in the relevant details." + 
-                        "then reload the program or call reload_cfg()")
-            self.cfg = generate_config(yaml_file)
+        :param configuration: The configuration of the RFSoC. This can be a path, omegaconf obj, or a dict.
+        :type configuration: str | dict[str, Any] | omegaconf.DictConfig
+        """
+        self.rf1 = Rfchan()
+        self.rf2 = Rfchan()
+        self.read_config(configuration)
+        self.rcon = RedisConnection(self.redisip, self.redisport)
+
+        # TODO: create a function that checks if the rfsoc on the other side exists and is on listening
+
+
+    def read_config(self, config: str | dict[str, Any] | omegaconf.DictConfig) -> None:
+        """
+        Reads the RFSOC configuration from a file or a dictionary depending on whether
+        it is a path, omegaconf object, or a dictionary. This function is called when an
+        RFSOC object is created.
+
+        :param config: Path to a config file or dictionary.
+        :type config: str | dict[str, Any] | omegaconf.DictConfig
+        :return:
+        """
+        if isinstance(config, str):
+            self.cfg = OmegaConf.load(config)
+        elif isinstance(config, dict):
+            self.cfg = OmegaConf.create(config)
+        elif isinstance(config, omegaconf.DictConfig):
+            self.cfg = config
         else:
-            self.cfg = OmegaConf.load(yaml_file)
-            self.yaml_file = yaml_file
-            self.rf1 = Rfchan()
-            self.rf2 = Rfchan()
-            
-            try:
-                self.name = self.cfg.rfsoc_config.rfsoc_name
-                self.eth = self.cfg.rfsoc_config.ethernet_config
-                self.rf1.ip = self.eth.udp_data_a_destip
-                self.rf2.ip = self.eth.udp_data_b_destip
-                self.rf1.port = self.eth.port_a
-                self.rf2.port = self.eth.port_b
-                self.redisip = self.cfg.rfsoc_config.redis_ip
-                self.redisport = self.cfg.rfsoc_config.redis_port
-                self.bitstream = self.cfg.rfsoc_config.bitstream
-            except omegaconf.errors.ConfigAttributeError:
-                log.error("Missing an entry in the YAML config. Please correct the issue or regenerate a new"
-                          "configuration file.")
-            self.rcon = RedisConnection(self.redisip, self.redisport)
+            raise Exception("Invalid configuration, expecting a path, omegaconf.DictConfig, or a dictionary.")
 
-    def reload_cfg(self):
-        """
-            reloads a given config
-        """
-        self.cfg = OmegaConf.load(self.yaml_file)
-        del self.rcon
-        self.redisip = self.cfg.rfsoc_config.redis_ip
-        self.redisport = self.cfg.rfsoc_config.redis_port
-        self.rcon = RedisConnection(self.cfg.rfsoc_config.redis_ip, self.cfg.rfsoc_config.redis_port)
-        self.name = self.cfg.rfsoc_config.rfsoc_name
-        self.eth = self.cfg.rfsoc_config.ethernet_config
-        self.rf1.ip = self.eth.udp_data_a_destip
-        self.rf2.ip = self.eth.udp_data_b_destip
-        self.rf1.port = self.eth.port_a
-        self.rf2.port = self.eth.port_b
-        self.bitstream = self.cfg.rfsoc_config.bitstream
+        try:
+            self.name = self.cfg.rfsoc_config.rfsoc_name
+            self.eth = self.cfg.rfsoc_config.ethernet_config
+            self.rf1.ip = self.eth.udp_data_a_destip
+            self.rf2.ip = self.eth.udp_data_b_destip
+            self.rf1.port = self.eth.port_a
+            self.rf2.port = self.eth.port_b
+            self.redisip = self.cfg.rfsoc_config.redis_ip
+            self.redisport = self.cfg.rfsoc_config.redis_port
+            self.bitstream = self.cfg.rfsoc_config.bitstream
+
+        except ConfigKeyError | ConfigAttributeError:
+            log.error("Missing an entry in the YAML config. Please correct the issue or regenerate a new"
+                      "configuration file.")
+            raise
 
 
-# FIXME: We're actually goin go pull this from the yml file
-    def upload_bitstream(self):
+
+    def upload_bitstream(self, remote_path: str = ""):
         """Command the RFSoC to upload(or reupload) it's FPGA Firmware"""
-        
-        args = {"abs_bitstream_path": self.bitstream}
+        if remote_path == "":
+            args = {"abs_bitstream_path": self.bitstream}
+        else:
+            args = {"abs_bitstream_path": remote_path}
+
         response = self.rcon.issue_command(self.name, "upload_bitstream", args, 20)
         if response is None:
-            log.error("upload_bitstream failed")
+            log.error("upload_bitstream FAILED")
             return
         log.info("upload_bitstream success")
         return

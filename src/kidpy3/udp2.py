@@ -172,6 +172,7 @@ def capture_packets(channel: Rfchan, n_packets: int):
     Captures to memmory instead of to a file, returning the result.
     Usefull for developing functions like LO sweep
     """
+    log = logger.getChild(__name__)
     soc = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     try:
         soc.bind((channel.ip, channel.port))
@@ -181,7 +182,7 @@ def capture_packets(channel: Rfchan, n_packets: int):
     
     def parse_packet(self):
         try:
-            soc.timeout(1)
+            soc.settimeout(1)
             data = soc.recv(8208 * 1)
             if len(data) <  8000:
                 print("invalid packet recieved")

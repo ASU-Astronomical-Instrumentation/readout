@@ -180,7 +180,7 @@ def capture_packets(channel: Rfchan, n_packets: int):
         log.error("Tried to bind to the socket but failed. It may already be in use or the address/port"+
                   "in question is invalid. The ethernet port could otherwise be disconnected as well")
     
-    def parse_packet(self):
+    def parse_packet():
         try:
             soc.settimeout(1)
             data = soc.recv(8208 * 1)

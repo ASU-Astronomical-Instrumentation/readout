@@ -204,10 +204,7 @@ def capture_packets(channel: Rfchan, n_packets: int):
 
     for i in range(n_packets):
         data_2 = parse_packet()
-        packets[:,i] = data_2 
-        if i%488 == 0:
-            print("{}/{} captured ({:.3f}% Complete)".format(i, n_packets,
-                                                                (n_packets / 488) * 100.0))
+        packets[:,i] = data_2
     soc.close()
     return packets
 

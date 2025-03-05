@@ -89,3 +89,21 @@ def losweep(loSource: Valon5009, channel: Rfchan, f_center, freqs, N_steps=500, 
 
     return (f, sweep_Z_f)
 
+
+def target_sweep(losource, channel, f_center ):
+    """
+    Is there actually a difference between this and lo sweep
+    """
+    pass
+
+
+
+
+
+
+
+
+
+
+
+

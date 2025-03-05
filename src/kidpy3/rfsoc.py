@@ -47,7 +47,7 @@ class RedisConnection:
 
         if self.is_connected():
             self.pubsub = self.r.pubsub()
-            self.pubsub.subscribe("REPLY") # TODO: Check if this needs to be unique.
+            self.pubsub.subscribe("REPLY") 
             log.debug(self.pubsub.get_message(timeout=1))
 
     def is_connected(self):
@@ -270,10 +270,11 @@ class RFSOC:
         log.info("config_hardware success")
         return True
 
-    def set_tone_list(self, chan=1, tonelist=[], amplitudes=[]):
+    def set_tone_list(self, chan=1, tonelist = [], amplitudes=[]):
         """Set a DAC channel to generate a signal from a list of tones
 
         :param chan: The DAC channel on the RFSoC to set. 
+
             Channel 1 is for Dac0 (I), Dac1 (Q)
             Channel 2 is for Dac2 (I), Dac3 (Q)
         :type chan: int
@@ -345,4 +346,4 @@ class RFSOC:
                 self.rf2.n_tones = len(response["tone_list"])
                 return np.array(self.rf2.baseband_freqs), np.array(self.rf2.tone_powers)
 
-
+        return (np.array([0]), np.array([0]))

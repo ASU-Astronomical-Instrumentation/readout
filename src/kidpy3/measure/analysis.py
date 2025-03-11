@@ -139,30 +139,20 @@ def find_resonators(
         bb_target_freqs = np.roll(
             bb_target_freqs, -np.argmin(np.abs(bb_target_freqs)) - 1
         )
-        return (center_freq, bb_target_freqs, rf_target_freqs)
+        return (center_freq, bb_target_freqs, rf_target_freqs, ilo, filtermags, kid_idx)
     else:
-        return None
-    #
-    # if plot:
-    #     plt.figure()
-    #     plt.plot(newfreqs, newmags, 'b', label='no filter', alpha=0.3)
-    #     plt.plot(newfreqs, filtermags, 'g', label='filtered', alpha=1)
-    #     plt.xlabel('frequency (Hz)')
-    #     plt.ylabel('dB')
-    #     plt.legend()
-    #     plt.figure()
-    #     plt.plot(newfreqs, newmags - filtermags, 'b', alpha=0.3)
-    #     plt.plot(newfreqs[ilo], newmags[ilo] - filtermags[ilo], 'r.')
-    #     plt.figure()
-    #     plt.plot(newfreqs, newmags, 'b')
-    #     plt.plot(newfreqs[kid_idx], newmags[kid_idx], 'r.')
-    #     plt.xlabel('frequency (Hz)')
-    #     plt.ylabel('dB')
-    # return
-    #
+        return (0, 0, 0, 0, 0, 0)
 
 
 class ResonatorFinder:
+    """
+    Facilitates finding resonators when their approximate locations in frequency are not known. This class relies on processing data from
+    the lo sweep function or class (depending on implementation)
+    
+    The user should init this object. Call find(...) followed by plot(...) until the desired parameters are set. Then follow up with save_h5(...)
+    Data can then be saved(appended) to a specified hdf5 file.
+
+    """
     def __init__(
         self,
         sweep_data: (tuple[npt.NDArray, npt.NDArray]) | str | Path,
@@ -186,25 +176,86 @@ class ResonatorFinder:
             self.sweep_data = sweep_data
         self.rf_target_freqs = np.zeros((1,))
         self.bb_target_freqs = np.zeros((1,))
-        self.center_freq = center_freq 
+        self.center_freq = center_freq
         self.lo_step = lo_step
         self.smoothing_scale = 0.0
         self.peak_threshold = 0.0
         self.spacing_threshold = 0.0
+        self.__ran_find_resonators = False
 
-    def save_h5(self, path : Path | str):
+    def save_h5(self, path: Path | str):
         if not os.path.exists(path):
             raise FileNotFoundError("Couldn't find sweep data from path specified")
-        pass
 
-    def save_npy(self):
-        pass
+        with h5py.File(path, "a") as fh:
+            fh.create_dataset(
+                "global_data/r_finder/rf_target_freqs", data=self.rf_target_freqs
+            )
+            fh.create_dataset(
+                "global_data/r_finder/bb_target_freqs", data=self.bb_target_freqs
+            )
+            fh.create_dataset("global_data/r_finder/center_freq", data=self.center_freq)
+            fh.create_dataset("global_data/r_finder/lo_step", data=self.lo_step)
+            fh.create_dataset(
+                "global_data/r_finder/smoothing_scale", data=self.smoothing_scale
+            )
+            fh.create_dataset(
+                "global_data/r_finder/peak_threshold", data=self.peak_threshold
+            )
+            fh.create_dataset(
+                "global_data/r_finder/spacing_threshold", data=self.spacing_threshold
+            )
+
+    def save_npy(self, path: Path | str):
+        if not os.path.exists(path):
+            raise FileNotFoundError("Couldn't find sweep data from path specified")
 
     def find(self, smoothing_scale, peak_threshold, spacing_threshold):
-        pass
+        self.smoothing_scale = smoothing_scale
+        self.peak_threshold = peak_threshold
+        self.spacing_threshold = spacing_threshold
+        (center_freq, bb_target_freqs, rf_target_freqs, ilo, filtermags, kid_idx) = (
+            find_resonators(
+                self.sweep_data,
+                self.center_freq,
+                self.lo_step,
+                self.smoothing_scale,
+                self.peak_threshold,
+                self.smoothing_scale,
+            )
+        )
+
+        self.bb_target_freqs = bb_target_freqs
+        self.center_freq = center_freq
+        self.rf_target_freqs = rf_target_freqs
+
+        self._ilo = ilo
+        self._filtermags = filtermags
+        self._kididx = kid_idx
 
     def plot(self):
-        pass
-    
+        (lofreqs, sweepz) = self.sweep_data
+        I = sweepz.real.flatten()[8000:]
+        Q = sweepz.imag.flatten()[8000:]
+        lofreqs = lofreqs.flatten()[8000:]
+        filtermags = self._filtermags
+        ilo = self._ilo
 
-        
+        kid_idx = self._kididx
+        mag = np.sqrt(I**2 + Q**2)
+        mags = 20 * np.log10(mag / np.max(mag))
+
+        plt.figure()
+        plt.plot(lofreqs, mags, "b", label="no filter", alpha=0.3)
+        plt.plot(lofreqs, filtermags, "g", label="filtered", alpha=1)
+        plt.xlabel("frequency (Hz)")
+        plt.ylabel("dB")
+        plt.legend()
+        plt.figure()
+        plt.plot(lofreqs, mags - filtermags, "b", alpha=0.3)
+        plt.plot(lofreqs[ilo], mags[ilo] - filtermags[ilo], "r.")
+        plt.figure()
+        plt.plot(lofreqs, mags, "b")
+        plt.plot(lofreqs[kid_idx], mags[kid_idx], "r.")
+        plt.xlabel("frequency (Hz)")
+        plt.ylabel("dB")

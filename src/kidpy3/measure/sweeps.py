@@ -8,7 +8,16 @@ from ..hardware import Valon5009
 SYNTH_A = 1
 SYNTH_B = 2
 
-def losweep(loSource: Valon5009, channel: Rfchan, f_center, freqs, N_steps=500, freq_step=0.0, naccums=100):
+
+def losweep(
+    loSource: Valon5009,
+    channel: Rfchan,
+    f_center,
+    freqs,
+    N_steps=500,
+    freq_step=0.0,
+    naccums=100,
+):
     """
     Actually perform an LO Sweep using valon 5009's and save the data
 
@@ -40,7 +49,6 @@ def losweep(loSource: Valon5009, channel: Rfchan, f_center, freqs, N_steps=500, 
 
     flos = np.arange(flo_start, flo_stop, flo_step)  # +1e-6
 
-
     actual_los = []
 
     def temp(lofreq):
@@ -65,7 +73,7 @@ def losweep(loSource: Valon5009, channel: Rfchan, f_center, freqs, N_steps=500, 
 
         Z = Imed + 1j * Qmed
         start_ind = np.min(np.argwhere(Imed != 0.0))
-        Z = Z[start_ind: start_ind + len(freqs)]
+        Z = Z[start_ind : start_ind + len(freqs)]
 
         print(".", end="")
 
@@ -90,20 +98,8 @@ def losweep(loSource: Valon5009, channel: Rfchan, f_center, freqs, N_steps=500, 
     return (f, sweep_Z_f)
 
 
-def target_sweep(losource, channel, f_center ):
+def target_sweep(losource, channel, f_center):
     """
     Is there actually a difference between this and lo sweep
     """
     pass
-
-
-
-
-
-
-
-
-
-
-
-

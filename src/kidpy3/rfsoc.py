@@ -9,6 +9,7 @@ Information
 The RFSOC class is the interface between the user's program and the operation of the readout system. The RFSOC class
 reads a user configured yml file based on the included rfsoc_config_default.yml.
 """
+
 from typing import Any
 
 import numpy as np
@@ -22,10 +23,7 @@ from omegaconf.errors import ConfigKeyError, ConfigAttributeError
 
 from .data_handler import Rfchan
 
-__all__ = [
-    'RFSOC',
-    'new_config'
-]
+__all__ = ["RFSOC", "new_config"]
 
 log = logging.getLogger(__name__)
 
@@ -47,7 +45,7 @@ class RedisConnection:
 
         if self.is_connected():
             self.pubsub = self.r.pubsub()
-            self.pubsub.subscribe("REPLY") 
+            self.pubsub.subscribe("REPLY")
             log.debug(self.pubsub.get_message(timeout=1))
 
     def is_connected(self):
@@ -148,28 +146,28 @@ def new_config(as_dict: bool = False) -> omegaconf.DictConfig | dict[str, Any]:
     :return: The omegaconf object or dictionary as specified by as_dict.
     """
     c = {
-        'rfsoc_config': {
-            'ethernet_config': {
-                'udp_data_a_sourceip': '0.0.0.0',
-                'udp_data_b_sourceip': '0.0.0.0',
-                'udp_data_a_destip': '0.0.0.0',
-                'udp_data_b_destip': '0.0.0.0',
-                'destmac_a': 'AABBCCDDEEFF',
-                'destmac_b': 'AABBCCDDEEFF',
-                'port_a': 4096,
-                'port_b': 4096,
+        "rfsoc_config": {
+            "ethernet_config": {
+                "udp_data_a_sourceip": "0.0.0.0",
+                "udp_data_b_sourceip": "0.0.0.0",
+                "udp_data_a_destip": "0.0.0.0",
+                "udp_data_b_destip": "0.0.0.0",
+                "destmac_a": "AABBCCDDEEFF",
+                "destmac_b": "AABBCCDDEEFF",
+                "port_a": 4096,
+                "port_b": 4096,
             },
-            'rfsoc_name': 'MATCH_ME_TO_THE_RFSOC',
-            'redis_ip': '127.0.0.1',
-            'redis_port': 6379,
-            'bitstream': '/remote/path/to/bitstream.bit'
+            "rfsoc_name": "MATCH_ME_TO_THE_RFSOC",
+            "redis_ip": "127.0.0.1",
+            "redis_port": 6379,
+            "bitstream": "/remote/path/to/bitstream.bit",
         },
-        'rf1': {
-            'raw_filename': '',
+        "rf1": {
+            "raw_filename": "",
         },
-        'rf2': {
-            'raw_filename': '',
-        }
+        "rf2": {
+            "raw_filename": "",
+        },
     }
     if as_dict:
         return c
@@ -193,7 +191,6 @@ class RFSOC:
 
         # TODO: create a function that checks if the rfsoc on the other side exists and is on listening
 
-
     def read_config(self, config: str | dict[str, Any] | omegaconf.DictConfig) -> None:
         """
         Reads the RFSOC configuration from a file or a dictionary depending on whether
@@ -211,7 +208,9 @@ class RFSOC:
         elif isinstance(config, omegaconf.DictConfig):
             self.cfg = config
         else:
-            raise Exception("Invalid configuration, expecting a path, omegaconf.DictConfig, or a dictionary.")
+            raise Exception(
+                "Invalid configuration, expecting a path, omegaconf.DictConfig, or a dictionary."
+            )
 
         try:
             self.name = self.cfg.rfsoc_config.rfsoc_name
@@ -225,11 +224,11 @@ class RFSOC:
             self.bitstream = self.cfg.rfsoc_config.bitstream
 
         except ConfigKeyError | ConfigAttributeError:
-            log.error("Missing an entry in the YAML config. Please correct the issue or regenerate a new"
-                      "configuration file.")
+            log.error(
+                "Missing an entry in the YAML config. Please correct the issue or regenerate a new"
+                "configuration file."
+            )
             raise
-
-
 
     def upload_bitstream(self, remote_path: str = ""):
         """Command the RFSoC to upload(or reupload) it's FPGA Firmware"""
@@ -247,7 +246,7 @@ class RFSOC:
 
     def config_hardware(self) -> bool:
         """
-        Configure the network parameters on the RFSOC. 
+        Configure the network parameters on the RFSOC.
         These paremeters are sources from the YAML file provided by the user when the RFSOC object
         is initialized.
         """
@@ -270,10 +269,10 @@ class RFSOC:
         log.info("config_hardware success")
         return True
 
-    def set_tone_list(self, chan=1, tonelist = [], amplitudes=[]):
+    def set_tone_list(self, chan=1, tonelist=[], amplitudes=[]):
         """Set a DAC channel to generate a signal from a list of tones
 
-        :param chan: The DAC channel on the RFSoC to set. 
+        :param chan: The DAC channel on the RFSoC to set.
 
             Channel 1 is for Dac0 (I), Dac1 (Q)
             Channel 2 is for Dac2 (I), Dac3 (Q)
@@ -283,9 +282,11 @@ class RFSOC:
         :param amplitudes: list of tone powers per tone, Normalized to 1, defaults to []
         :type amplitudes: list, optional
         """
-        assert chan==1 or chan==2, "Expected either channel 1 or channel 2"
+        assert chan == 1 or chan == 2, "Expected either channel 1 or channel 2"
         assert len(tonelist) > 0, "Expected a list of at least 1 frequency"
-        assert len(amplitudes) == len(tonelist), "Expected the amplitude list to have the same length as the tone list"
+        assert len(amplitudes) == len(
+            tonelist
+        ), "Expected the amplitude list to have the same length as the tone list"
         f = tonelist
         a = amplitudes
         data = {}
@@ -308,7 +309,6 @@ class RFSOC:
             self.rf2.baseband_freqs = f
             self.rf2.tone_powers = a
             self.rf2.n_tones = len(f)
-
 
         response = self.rcon.issue_command(self.name, "set_tone_list", data, 10)
         if response is None:

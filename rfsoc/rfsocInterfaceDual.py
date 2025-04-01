@@ -75,7 +75,7 @@ def configure_registers(dataA_srcip: int, dataB_srcip: int, dataA_dstip: int, da
 def norm_wave(wave, max_amp=2**15 - 1) -> np.ndarray:
     norm = np.max(np.abs(wave))
     if norm == 0:
-        return wave_real, wave_imag
+        return wave.real, wave.imag
     wave_real = ((wave.real / norm) * max_amp).astype("int16")
     wave_imag = ((wave.imag / norm) * max_amp).astype("int16")
     return wave_real, wave_imag

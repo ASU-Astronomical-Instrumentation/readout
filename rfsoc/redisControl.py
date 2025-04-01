@@ -194,7 +194,6 @@ def main():
     conf = load_config()
 
     name = conf.cfg.rfsocName
-    crash_on_noconnection = False
     connection = RedisConnection(name, conf.cfg.redis_host, port=conf.cfg.redis_port)
     log.debug("Connection to redis server established")
     # loop forever until connection comes up?

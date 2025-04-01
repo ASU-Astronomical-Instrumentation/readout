@@ -66,89 +66,11 @@ def lowpass_cosine(y, tau, f_3db, width, padd_data=True):
     return filtered
 
 
-def find_resonators(
-    lo_sweep_data: tuple[npt.NDArray, npt.NDArray],
-    center_freq: float,
-    lo_step: float,
-    smoothing_scale: float,
-    peak_threshold: float,
-    spacing_threshold: float,
-):
-    """
-    Parameters:
-        lo_sweep_data (tuple[npt.NDArray, npt.NDArray]): Lo Sweep Data.
-            This function expects a tuple containing probetones and resultant s21
-        center_freq (float): center frequency with which the sweep was performed
-        lo_step (float): Step size of the LO sweep
-        smoothing_scale (float): Low pass filter cutoff freq, Hz
-        peak_threshold (float): Amplitude cutoff threshold, dB (e.g., search points <= -6 dB)
-        spacing_threshold (float): Frequency spacing threshold, kHz
-            if two resonances spaced by <= this amount, choose the deeper one
-    """
-
-    (lofreqs, sweepz) = lo_sweep_data
-    # Remove the strange, first 8 tones (8*1000)
-    I = sweepz.real.flatten()[8000:]
-    Q = sweepz.imag.flatten()[8000:]
-    chan_freqs = lofreqs.flatten()[8000:]
-    mag = np.sqrt(I**2 + Q**2)
-    mags = 20 * np.log10(mag / np.max(mag))
-
-    newmags = mags
-    newfreqs = chan_freqs
-    filtermags = lowpass_cosine(
-        newmags, lo_step, 1.0 / smoothing_scale, 0.1 * (1.0 / smoothing_scale)
-    )
-    ilo = np.where((newmags - filtermags) < -1.0 * peak_threshold)[0]
-    iup = np.where((newmags - filtermags) > -1.0 * peak_threshold)[0]
-    new_mags = newmags - filtermags
-    new_mags[iup] = 0
-    labeled_image, num_objects = ndimage.label(new_mags)
-    indices = ndimage.minimum_position(
-        new_mags, labeled_image, np.arange(num_objects) + 1
-    )
-    kid_idx = np.array(indices, dtype="int")
-    del_idx = []
-    for i in range(len(kid_idx) - 1):
-        spacing = newfreqs[kid_idx[i + 1]] - newfreqs[kid_idx[i]]
-        if spacing < spacing_threshold:
-            if new_mags[kid_idx[i + 1]] < new_mags[kid_idx[i]]:
-                del_idx.append(i)
-            else:
-                del_idx.append(i + 1)
-
-    del_idx = np.array(del_idx).astype("int")
-    kid_idx = np.delete(kid_idx, del_idx)
-
-    del_again = []
-    for i in range(len(kid_idx) - 1):
-        spacing = chan_freqs[kid_idx[i + 1]] - chan_freqs[kid_idx[i]]
-        if spacing < spacing_threshold:
-            if new_mags[kid_idx[i + 1]] < new_mags[kid_idx[i]]:
-                del_again.append(i)
-            else:
-                del_again.append(i + 1)
-
-    del_again = np.array(del_again).astype("int")
-    kid_idx = np.delete(kid_idx, del_again)
-    # list of kid frequencies
-    rf_target_freqs = np.array(chan_freqs[kid_idx]).real
-    bb_target_freqs = (rf_target_freqs) - (center_freq * 1e6)
-
-    if len(bb_target_freqs) > 0:
-        bb_target_freqs = np.roll(
-            bb_target_freqs, -np.argmin(np.abs(bb_target_freqs)) - 1
-        )
-        return (center_freq, bb_target_freqs, rf_target_freqs, ilo, filtermags, kid_idx)
-    else:
-        return (0, 0, 0, 0, 0, 0)
-
-
 class ResonatorFinder:
     """
     Facilitates finding resonators when their approximate locations in frequency are not known. This class relies on processing data from
     the lo sweep function or class (depending on implementation)
-    
+
     The user should init this object. Call find(...) followed by plot(...) until the desired parameters are set. Then follow up with save_h5(...)
     Data can then be saved(appended) to a specified hdf5 file.
 
@@ -181,7 +103,6 @@ class ResonatorFinder:
         self.smoothing_scale = 0.0
         self.peak_threshold = 0.0
         self.spacing_threshold = 0.0
-        self.__ran_find_resonators = False
 
     def save_h5(self, path: Path | str):
         if not os.path.exists(path):
@@ -207,32 +128,9 @@ class ResonatorFinder:
             )
 
     def save_npy(self, path: Path | str):
-        if not os.path.exists(path):
-            raise FileNotFoundError("Couldn't find sweep data from path specified")
+        raise NotImplemented
 
-    def find(self, smoothing_scale, peak_threshold, spacing_threshold):
-        self.smoothing_scale = smoothing_scale
-        self.peak_threshold = peak_threshold
-        self.spacing_threshold = spacing_threshold
-        (center_freq, bb_target_freqs, rf_target_freqs, ilo, filtermags, kid_idx) = (
-            find_resonators(
-                self.sweep_data,
-                self.center_freq,
-                self.lo_step,
-                self.smoothing_scale,
-                self.peak_threshold,
-                self.smoothing_scale,
-            )
-        )
-
-        self.bb_target_freqs = bb_target_freqs
-        self.center_freq = center_freq
-        self.rf_target_freqs = rf_target_freqs
-
-        self._ilo = ilo
-        self._filtermags = filtermags
-        self._kididx = kid_idx
-
+    
     def plot(self):
         (lofreqs, sweepz) = self.sweep_data
         I = sweepz.real.flatten()[8000:]
@@ -259,3 +157,79 @@ class ResonatorFinder:
         plt.plot(lofreqs[kid_idx], mags[kid_idx], "r.")
         plt.xlabel("frequency (Hz)")
         plt.ylabel("dB")
+
+    def find_resonators(self,
+        smoothing_scale: float,
+        peak_threshold: float,
+        spacing_threshold: float,
+    ):
+        """
+        Parameters:
+            lo_sweep_data (tuple[npt.NDArray, npt.NDArray]): Lo Sweep Data.
+                This function expects a tuple containing probetones and resultant s21
+            center_freq (float): center frequency with which the sweep was performed
+            lo_step (float): Step size of the LO sweep
+            smoothing_scale (float): Low pass filter cutoff freq, Hz
+            peak_threshold (float): Amplitude cutoff threshold, dB (e.g., search points <= -6 dB)
+            spacing_threshold (float): Frequency spacing threshold, kHz
+                if two resonances spaced by <= this amount, choose the deeper one
+        """
+
+        (lofreqs, sweepz) = self.sweep_data
+        # Remove the strange, first 8 tones (8*1000)
+        I = sweepz.real.flatten()[8000:]
+        Q = sweepz.imag.flatten()[8000:]
+        chan_freqs = lofreqs.flatten()[8000:]
+        mag = np.sqrt(I**2 + Q**2)
+        mags = 20 * np.log10(mag / np.max(mag))
+
+        self.mags = mags
+        newmags = mags
+        newfreqs = chan_freqs
+        filtermags = lowpass_cosine(
+            newmags, lo_step, 1.0 / smoothing_scale, 0.1 * (1.0 / smoothing_scale)
+        )
+        ilo = np.where((newmags - filtermags) < -1.0 * peak_threshold)[0]
+        self.ilo = ilo
+        iup = np.where((newmags - filtermags) > -1.0 * peak_threshold)[0]
+        self.iup = iup
+        new_mags = newmags - filtermags
+        new_mags[iup] = 0
+        labeled_image, num_objects = ndimage.label(new_mags)
+        indices = ndimage.minimum_position(
+            new_mags, labeled_image, np.arange(num_objects) + 1
+        )
+        kid_idx = np.array(indices, dtype="int")
+        del_idx = []
+        for i in range(len(kid_idx) - 1):
+            spacing = newfreqs[kid_idx[i + 1]] - newfreqs[kid_idx[i]]
+            if spacing < spacing_threshold:
+                if new_mags[kid_idx[i + 1]] < new_mags[kid_idx[i]]:
+                    del_idx.append(i)
+                else:
+                    del_idx.append(i + 1)
+
+        del_idx = np.array(del_idx).astype("int")
+        kid_idx = np.delete(kid_idx, del_idx)
+
+        del_again = []
+        for i in range(len(kid_idx) - 1):
+            spacing = chan_freqs[kid_idx[i + 1]] - chan_freqs[kid_idx[i]]
+            if spacing < spacing_threshold:
+                if new_mags[kid_idx[i + 1]] < new_mags[kid_idx[i]]:
+                    del_again.append(i)
+                else:
+                    del_again.append(i + 1)
+
+        del_again = np.array(del_again).astype("int")
+        kid_idx = np.delete(kid_idx, del_again)
+        # list of kid frequencies
+        rf_target_freqs = np.array(chan_freqs[kid_idx]).real
+        bb_target_freqs = (rf_target_freqs) - (center_freq * 1e6)
+
+        bbTargFleng = len(bb_target_freqs)
+        if bbTargFleng > 0:
+            bb_target_freqs = np.roll(
+                bb_target_freqs, -np.argmin(np.abs(bb_target_freqs)) - 1
+            )
+        return bbTargFleng

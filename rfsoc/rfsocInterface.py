@@ -97,7 +97,7 @@ class rfsocInterface:
         eth_delay_reg = self.firmware.eth_delay  # programmable delay for eth byte shift
         data_in_mux = self.firmware.data_in_mux
 
-        # setting ips  TODO::GET DATA FROM CONFIG FILE
+        # setting ips  
         src_ip_int32 = int(src_ipaddr, 16)
         dst_ip_int32 = int(dst_ipaddr, 16)
         src_mac0_int32 = int("deadbeef", 16)

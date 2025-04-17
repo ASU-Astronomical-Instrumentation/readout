@@ -19,7 +19,7 @@ import redis
 import json
 import os
 from omegaconf import OmegaConf, omegaconf
-from omegaconf.errors import ConfigKeyError, ConfigAttributeError
+from import ConfigKeyError, ConfigAttributeError
 from .kp3Exceptions import *
 
 from .data_handler import Rfchan
@@ -54,7 +54,6 @@ class RedisConnection:
 
         Returns:
             True if connected, false if not
-        :rtype: bool
         """
         is_connected = False
         try:
@@ -229,7 +228,7 @@ class RFSOC:
             self.redisport = self.cfg.rfsoc_config.redis_port
             self.bitstream = self.cfg.rfsoc_config.bitstream
 
-        except omegaconf.errors.ConfigAttributeError as err:
+        except ConfigAttributeError as err:
             raise MissingConfigError(
                 f"Expected '{err.full_key}' to exist in the specified config"
             ) from err
@@ -250,7 +249,7 @@ class RFSOC:
         else:
             args = {"abs_bitstream_path": remote_path}
 
-        response = self.rcon.issue_command(self.name, "upload_bitstream", args, 20)
+        _ = self.rcon.issue_command(self.name, "upload_bitstream", args, 21)
         log.info("upload_bitstream success")
         return True
 
@@ -277,12 +276,12 @@ class RFSOC:
             data["port_a"] = self.eth.port_a
             data["port_b"] = self.eth.port_b
 
-        except omegaconf.errors.ConfigAttributeError as err:
+        except ConfigAttributeError as err:
             raise MissingConfigError(
                 f"Expected '{err.full_key}' to exist in the specified config"
             ) from err
 
-        response = self.rcon.issue_command(self.name, "config_hardware", data, 10)
+        _ = self.rcon.issue_command(self.name, "config_hardware", data, 10)
 
         log.info("config_hardware success")
         return True
@@ -290,15 +289,19 @@ class RFSOC:
     def set_tone_list(self, chan=1, tonelist=[], amplitudes=[]):
         """Set a DAC channel to generate a signal from a list of tones
 
-        :param chan: The DAC channel on the RFSoC to set.
+        Arguments:
+            chan(int): The DAC channel on the RFSoC to set.
+                Channel 1 is for Dac0 (I), Dac1 (Q)
+                Channel 2 is for Dac2 (I), Dac3 (Q)
+            tonelist(list | npt.ndarray): list of tones in MHz to generate, defaults to []
+            amplitudes(list | npt.ndarray): list of tone powers per tone, Normalized to 1, defaults to []
 
-            Channel 1 is for Dac0 (I), Dac1 (Q)
-            Channel 2 is for Dac2 (I), Dac3 (Q)
-        :type chan: int
-        :param tonelist: list of tones in MHz to generate, defaults to []
-        :type tonelist: list, optional
-        :param amplitudes: list of tone powers per tone, Normalized to 1, defaults to []
-        :type amplitudes: list, optional
+        Returns:
+            bool on success
+
+        Raises:
+            RedisConnectionError: If a failure to connect to the Redis server occurs.
+            CommandTimeoutError: The command timed out.
         """
         assert chan == 1 or chan == 2, "Expected either channel 1 or channel 2"
         assert len(tonelist) > 0, "Expected a list of at least 1 frequency"
@@ -328,10 +331,8 @@ class RFSOC:
             self.rf2.tone_powers = a
             self.rf2.n_tones = len(f)
 
-        response = self.rcon.issue_command(self.name, "set_tone_list", data, 10)
-        if response is None:
-            log.error("set_tone_list failed")
-            return
+        _ = self.rcon.issue_command(self.name, "set_tone_list", data, 10)
+        return True # If this had failed, there would be an exception so we can safely return true here.
 
     def get_tone_list(self, chan: int = 1) -> tuple[np.ndarray, np.ndarray]:
         """

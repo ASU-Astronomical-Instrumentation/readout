@@ -24,15 +24,12 @@ The RawDataFile class is analogous to standard camera's raw file. Detector data 
 __all__ = ["RawDataFile"]
 
 from typing import Any
-
 import h5py
 import os
 import logging
 import numpy as np
 from datetime import date
 
-import omegaconf
-from omegaconf import OmegaConf
 from dataclasses import dataclass
 import glob
 
@@ -62,6 +59,9 @@ class RawDataFile:
          .. DANGER::
             Opening with 'w' unintentionally can cause data loss, especially if users are accustomed to
             the w+ file mode
+
+    Raises:
+        FileNotFoundError
 
     """
 

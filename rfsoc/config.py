@@ -15,7 +15,7 @@ import logging
 import uuid
 
 __all__ = []
-__version__ = "0.2"
+__version__ = "0.2.7"
 __author__ = "Cody Roberson"
 __email__ = "carobers@asu.edu"
 
@@ -30,13 +30,8 @@ class ConfigData:
     """
 
     rfsocName: str = "devrfsoc"
-    crash_on_noconnection: bool = "False"
     redis_host: str = "192.168.2.10"
     redis_port: str = "6379"
-    dstmac_msb: str = "803f"
-    dstmac_lsb: str = "5d092bb0"
-    src_ipaddr: str = "c0a80329"
-    dst_ipaddr: str = "c0a80328"
 
 
 class GeneralConfig(object):

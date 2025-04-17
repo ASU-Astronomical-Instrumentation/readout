@@ -1,22 +1,28 @@
 """
 @author: Cody Roberson
-@date: Apr 2024
+@date: Apr 2025
 @file: redisControl.py
+@version: 0.2.8
 @description:
     This file is the main control loop for the rfsoc. It listens for commands from the redis server and executes them.
     A dictionary is used to map commands to functions in order to create a dispatch table".
-    I just want to go back to C and use a switch statement :c.
 
+    This application outputs to a log file in /var/log/kidpyControl.log. Once the log reaches ~ 20 MB, a new log file
+    is created and old one will be renamed to kidpyControl.log.1, kidpyControl.log.2 ... and so on up to 10. Following this, rollover occurs.
+
+    This program is intended to run as a daemon...
 
 """
 
 # Set up logging
 import logging
-
-__LOGFMT = "%(asctime)s|%(levelname)s|%(filename)s|%(lineno)d|%(funcName)s| %(message)s"
+from logging.handlers import RotatingFileHandler
+import os
+import traceback
+__LOGFMT = "%(asctime)s|%(levelname)s|%(filename)s|%(lineno)d|%(funcName)s|   %(message)s"
 logging.basicConfig(format=__LOGFMT, level=logging.DEBUG)
 log = logging.getLogger(__name__)
-logh = logging.FileHandler("./rediscontrol_debug.log")
+logh = RotatingFileHandler("/var/log/kidpyControl.log", mode = 'a', maxBytes=20_971_520, backupCount=10)
 log.addHandler(logh)
 logh.setFormatter(logging.Formatter(__LOGFMT))
 
@@ -26,12 +32,11 @@ log.info("Starting redisControl.py; loading libraries")
 import getpass
 
 if getpass.getuser() != "root":
-    print("rfsocInterface.py: root priviliges are required, please run as root.")
+    log.error("rfsocInterface.py: root priviliges are required, please run as root.")
     exit()
 
 
 import redis
-from uuid import uuid4
 import numpy as np
 import json
 from time import sleep
@@ -66,20 +71,34 @@ def create_response(
 def upload_bitstream(uuid, data: dict):
     status = False
     err = ""
+    bitstream = "/placeholder/path/to/nowhere"
     try:
         bitstream = data["abs_bitstream_path"]
-        ri.uploadOverlay(bitstream)
-        status = True
     except KeyError:
         err = "missing required parameters"
+        log.exception("Key error exception caught while parsing upload bitstream command")
+        return create_response(status, uuid, error=err)
+    if not os.path.exists(bitstream):
+        err = "Bitstream does not exist."
         log.error(err)
-    except IOError as e:
-        err = f"Could not find specified file, pynq library reports\n{str(e)}"
-        log.error(err)
-    except OSError as e:
-        err = f"Could not find specified file, pynq library reports\n{str(e)}"
-        log.error(err)
+        return create_response(status, uuid, error=err)
+    try:
+        ri.uploadOverlay(bitstream)
+    except Exception:
+        log.exception("Exception occurred while attempting to upload the bitstream")
+        return create_response(status, uuid, error="Exception occurred while attempting to upload the bitstream")
+    status = True
     return create_response(status, uuid, error=err)
+
+def config_hardware_chan1(uuid, data: dict):
+    _ = uuid
+    _ = data
+    raise Exception("Not implemented")
+
+def config_hardware_chan2(uuid, data: dict):
+    _ = uuid
+    _ = data
+    raise Exception("Not implemented")
 
 
 def config_hardware(uuid, data: dict):
@@ -88,11 +107,20 @@ def config_hardware(uuid, data: dict):
     :param data:
     :return:
     """
-
+    data_a_srcip = "0.0.0.0"
+    data_b_srcip = "0.0.0.0"
+    data_a_dstip = "0.0.0.0"
+    data_b_dstip = "0.0.0.0"
+    dstmac_a_msb = "00:00:00:00"
+    dstmac_a_lsb = "00:00"
+    dstmac_b_msb = "00:00:00:00"
+    dstmac_b_lsb = "00:00"
+    porta = 0
+    portb = 0
     status = False
     err = ""
     try:
-        print(f"config_hardware, {data}")
+        log.debug(f"config_hardware, {data}")
         data_a_srcip = int(ipaddress.ip_address(data["data_a_srcip"]))
         data_b_srcip = int(ipaddress.ip_address(data["data_b_srcip"]))
         data_a_dstip = int(ipaddress.ip_address(data["data_a_dstip"]))
@@ -103,18 +131,24 @@ def config_hardware(uuid, data: dict):
         dstmac_b_lsb = int(data["destmac_b_lsb"], 16)
         porta = int(data["port_a"])
         portb = int(data["port_b"])
-
-        ri.configure_registers(data_a_srcip, data_b_srcip, data_a_dstip, data_b_dstip, dstmac_a_msb, dstmac_a_lsb,
-                               dstmac_b_msb, dstmac_b_lsb, porta, portb)
-
-        status = True
     except KeyError:
         err = "missing required parameters"
-        log.error(err)
+        log.exception(err)
+        return create_response(status, uuid, error=err)
     except ValueError:
         err = "invalid parameter data type"
-        log.error(err)
-        raise
+        log.exception(err)
+        return create_response(status, uuid, error=err)
+
+    try:
+        ri.configure_registers(data_a_srcip, data_b_srcip, data_a_dstip, data_b_dstip, dstmac_a_msb, dstmac_a_lsb,
+                               dstmac_b_msb, dstmac_b_lsb, porta, portb)
+    except:
+        err = "An error occured while attempting to set registers."
+        log.exception(err)
+        return create_response(status, uuid, error=err)
+    
+    status = True
     return create_response(status, uuid, error=err)
 
 
@@ -123,31 +157,43 @@ def set_tone_list(uuid, data: dict):
     global last_tonelist_chan2
     global last_amplitudes_chan1
     global last_amplitudes_chan2
-    status = False,
+    chan = 0
+    strtonelist = ""
+    amplitudes = ""
+
+    status = False
     err = ""
     try:
         strtonelist = data["tone_list"]
         chan = int(data["channel"])
         amplitudes = data["amplitudes"]
-        if chan == 1:
-            last_tonelist_chan1 = strtonelist
-            last_amplitudes_chan1 = amplitudes
-        elif chan == 2:
-            last_tonelist_chan2 = strtonelist
-            last_amplitudes_chan2 = amplitudes
+    except KeyError:  
+        err = "missing required parameters, double check that tone list and amplitude list are present"
+        log.exception(err)
+        return create_response(status, uuid, error=err)
+    except ValueError:
+        err = "invalid parameter data type"
+        log.exception(err)
+        return create_response(status, uuid, error=err)
+
+    if chan == 1:
+        last_tonelist_chan1 = strtonelist
+        last_amplitudes_chan1 = amplitudes
+    elif chan == 2:
+        last_tonelist_chan2 = strtonelist
+        last_amplitudes_chan2 = amplitudes
+    try:
         tonelist = np.array(strtonelist)
         x, phi, freqactual = ri.generate_wave_ddr4(tonelist, amplitudes)
         ri.load_bin_list(chan, freqactual)
         wave_r, wave_i = ri.norm_wave(x)
         ri.load_ddr4(chan, wave_r, wave_i, phi)
         ri.reset_accum_and_sync(chan, freqactual)
-        status = True
-    except KeyError:  # tone_list does not exist
-        err = "missing required parameters, double check that tone list and amplitude list are present"
-        log.error(err)
-    except ValueError:
-        err = "invalid parameter data type"
-        log.error(err)
+    except:
+        err = "Exception has occured while attempting to upload the waveform"
+        log.exception(err)
+        return create_response(status, uuid, error=err)
+    status = True
     return create_response(status, uuid, error=err)
 
 
@@ -156,7 +202,7 @@ def get_tone_list(uuid, data: dict):
     global last_tonelist_chan2
     global last_amplitudes_chan1
     global last_amplitudes_chan2
-    status = False,
+    status = False
     err = ""
     try:
         chan = int(data["channel"])
@@ -172,13 +218,15 @@ def get_tone_list(uuid, data: dict):
         else:
             err = "bad channel number"
             log.error(err)
-            status = False
+            return create_response(status, uuid, error=err, data = data)
     except KeyError:
         err = "missing required parameters"
         log.error(err)
+        return create_response(status, uuid, error=err)
     except ValueError:
         err = "invalid parameter data type"
         log.error(err)
+        return create_response(status, uuid, error=err)
 
     return create_response(status, uuid, error=err, data = data)
 
@@ -191,12 +239,13 @@ def load_config() -> config.GeneralConfig:
 
 
 def main():
+    """
+    main daemon for rfsoc control.
+    """
     conf = load_config()
 
     name = conf.cfg.rfsocName
     connection = RedisConnection(name, conf.cfg.redis_host, port=conf.cfg.redis_port)
-    log.debug("Connection to redis server established")
-    # loop forever until connection comes up?
     while 1:
         msg = connection.grab_command_msg()
         if msg is None:
@@ -209,28 +258,40 @@ def main():
             try:
                 command = json.loads(msg["data"].decode())
             except json.JSONDecodeError:
-                log.error(f"Could not decode JSON from command: {command['command']}")
+                err = "Could not decode JSON from command"
+                log.exception(err)
+                connection.sendmsg(create_response(False, "000000000000", error = err))
                 continue
             except KeyError:
-                log.error(f"no data field in command message")
+                err = "no data field in command message"
+                log.exception(err)
+                connection.sendmsg(create_response(False, "000000000000", error = err))
                 continue
-
             if command["command"] in COMMAND_DICT:
                 function = COMMAND_DICT[command["command"]]
                 args = {}
                 uuid = "no uuid"
                 try:
                     args = command["data"]
+                except KeyError:
+                    err = f"data key was empty for the following command {command['command']}"
+                    log.exception(err)
+                    connection.sendmsg(create_response(False, "000000000000", error = err))
+                    continue
+                try:
                     uuid = command['uuid']
                 except KeyError:
-                    log.warning(f"No data provided for command: {command['command']}")
-                    # Should this actually reply with an error message
+                    err = f"uuid key was empty for the following command {command['command']}"
+                    log.exception(err)
+                    connection.sendmsg(create_response(False, "000000000000", error = err))
                     continue
-                log.debug(f"Executing command: {command['command']} with args: {args}")
+                log.info(f"Executing command: {command['command']} with args: {args}")
                 response_str = function(uuid, args)
                 connection.sendmsg(response_str)
             else:
-                log.warning(f"Unknown command: {command['command']}")
+                err = "Error, unknown command received"
+                log.error(err)
+                connection.sendmsg(create_response(False, "000000000000", error = err))
         else:
             continue
 
@@ -238,24 +299,18 @@ def main():
 class RedisConnection:
     def __init__(self, name, host, port) -> None:
         self.r = redis.Redis(host=host, port=port)
-        loopcount = 0
-        while 1:
-            log.info("Attempting to connect to redis server")
-            if loopcount > 0:
-                log.info(f"Attempt {loopcount} to connect to redis server")
-            loopcount += 1
-            if self.check_connection():
-                self.pubsub = self.r.pubsub()
-                logging.debug(f"subscribing to {name}")
-                self.pubsub.subscribe(name)
-                break
-            elif loopcount > 10:
-                log.error("Could not connect to redis server after 10 attempts")
-                exit(0)
-            else:
-                log.warning("Could not connect to redis server")
-                sleep(3)
-                
+        log.debug("Attempting to connect to redis server")
+        if self.check_connection():
+            self.pubsub = self.r.pubsub()
+            logging.debug(f"subscribing to {name}")
+            self.pubsub.subscribe(name)
+            log.info("Connected to readout server's redis")
+        else:
+            log.error(f"Could not connect to redis server. HOST={host}, PORT={port}")
+             # This is here because we don't need to constantly retry (as systemd will try to relaunch this app)
+            sleep(5)
+            exit(1)
+                                
     def check_connection(self):
         """Check if the RFSOC is connected to the redis server
 
@@ -267,13 +322,12 @@ class RedisConnection:
         try:
             self.r.ping()  # Doesn't just return t/f, it throws an exception if it can't connect.. y tho?
             is_connected = True
-            log.debug(f"Redis Connection Status: {is_connected}")
         except redis.ConnectionError:
             is_connected = False
-            log.error("Redis Connection Error")
+            log.exception("Redis Connection Error")
         except redis.TimeoutError:
             is_connected = False
-            log.error("Redis Connection Timeout")
+            log.exception("Redis Connection Timeout")
         finally:
             return is_connected
 

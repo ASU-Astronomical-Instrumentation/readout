@@ -15,7 +15,8 @@ dependencies = [
     "scipy (>=1.16.1,<2.0.0)",
     "matplotlib (>=3.10.5,<4.0.0)",
     "setuptools (>=80.9.0,<81.0.0)",
-    "omegaconf (>=2.3.0,<3.0.0)"
+    "omegaconf (>=2.3.0,<3.0.0)",
+    "pyserial (>=3.5,<4.0)"
 ]
 
 

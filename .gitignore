@@ -8,7 +8,5 @@ conf.py
 testconf.yml
 kidpy3/TODO
 poetry.lock
-build
-build/temp.linux-x86_64-cpython-313/kidpy3/_data_collector
-kidpy3/_data_collector/data_collector.c
-kidpy3/_data_collector.cpython-313-x86_64-linux-gnu.so
+*.h5
+

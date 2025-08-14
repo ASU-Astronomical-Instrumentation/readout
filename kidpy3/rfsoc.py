@@ -19,7 +19,7 @@ import redis
 import json
 import os
 from omegaconf import OmegaConf, omegaconf
-from import ConfigKeyError, ConfigAttributeError
+from omegaconf.errors import ConfigKeyError, ConfigAttributeError
 from .kp3Exceptions import *
 
 from .data_handler import Rfchan

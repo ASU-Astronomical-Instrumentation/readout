@@ -8,3 +8,4 @@ virtenv
 conf.py
 testconf.yml
 kidpy3/TODO
+poetry.lock

@@ -21,7 +21,7 @@ The RawDataFile class is analogous to standard camera's raw file. Detector data 
 
 """
 from __future__ import annotations
-__all__ = ['RawDataFile']
+__all__ = ['RawDataFile', 'Rfchan']
 
 from typing import Any
 

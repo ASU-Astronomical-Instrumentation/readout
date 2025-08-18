@@ -31,7 +31,7 @@ compile_socket:
 		${LIBS}
 
 clean: 
-	rm -f app.out *.o src/*.o
+	rm -f app.out *.o src/*.o hdf.out
 	rm -f *.h5 *.hdf5 *.hd5
 
 

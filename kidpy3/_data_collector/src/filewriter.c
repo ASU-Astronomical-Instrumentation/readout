@@ -54,9 +54,29 @@ int main(int argc, char **argv) {
 
 
 
+    status = H5Tclose(rawdata.datatype);
+    if (status < 0) {
+        fprintf(stderr, "Could not close datatype\n");
+        return -1;
+    }
+
+    status = H5Dclose(rawdata.dset);
+    if (status < 0) {
+        fprintf(stderr, "Could not close dataset\n");
+        return -1;
+    }
+
+    status = H5Sclose(rawdata.dataspace);
+    if (status < 0) {
+        fprintf(stderr, "Could not close dataspace\n");
+        return -1;
+    }
 
     status = H5Fclose(rawdata.file);
-    printf("status = %ld\n", status);
+    if (status < 0) {
+        fprintf(stderr, "Could not close data file\n");
+        return -1;
+    }
 
     return 0;
 }

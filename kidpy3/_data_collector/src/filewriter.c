@@ -27,6 +27,7 @@ typedef struct raw_data_t {
         hsize_t max_dim[2];
         hid_t dataspace;
         hid_t dataset;
+        hid_t rank;
     }dset;
 
     struct dset i;
@@ -37,7 +38,45 @@ typedef struct raw_data_t {
 
 #ifndef __BUILD_FOR_LIB__
 
+int c_collect_data(const char* filename) {
+    herr_t status;
+    raw_data_t df;
 
+    df.file = H5Fopen(filename, H5F_ACC_RDWR, H5P_DEFAULT);
+    const hid_t grp = H5Gopen2(df.file, "time_ordered_data", H5P_DEFAULT);
+
+    // Get adc_i dataset details
+    df.i.dataset   = H5Dopen(grp, "adc_i", H5P_DEFAULT);
+    df.i.datatype  = H5Dget_type(df.i.dataset);
+    df.i.dataspace = H5Dget_space(df.i.dataset);
+    df.i.rank      = H5Sget_simple_extent_dims(df.i.dataspace, df.i.dim, df.i.max_dim);
+
+    // Get adc_q dataset details
+    df.q.dataset   = H5Dopen(grp, "adc_q", H5P_DEFAULT);
+    df.q.datatype  = H5Dget_type(df.q.dataset);
+    df.q.dataspace = H5Dget_space(df.q.dataset);
+    df.q.rank      = H5Sget_simple_extent_dims(df.q.dataspace, df.q.dim, df.q.max_dim);
+
+    // Get timestamp dataset details
+    df.ts.dataset   = H5Dopen(grp, "timestamp", H5P_DEFAULT);
+    df.ts.datatype  = H5Dget_type(df.ts.dataset);
+    df.ts.dataspace = H5Dget_space(df.ts.dataset);
+    df.ts.rank      = H5Sget_simple_extent_dims(df.ts.dataspace, df.ts.dim, df.ts.max_dim);
+
+    // Get packet index details
+    df.pkt_idx.dataset   = H5Dopen(grp, "pkt_idx", H5P_DEFAULT);
+    df.pkt_idx.datatype  = H5Dget_type(df.pkt_idx.dataset);
+    df.pkt_idx.dataspace = H5Dget_space(df.pkt_idx.dataset);
+    df.pkt_idx.rank      = H5Sget_simple_extent_dims(df.pkt_idx.dataspace, df.pkt_idx.dim, df.pkt_idx.max_dim);
+
+    /**
+     *  Bind to a socket, setup a loop where we grab data, separate it, save to proper datasets,
+     * rinse, repeat.
+     */
+
+
+    return 0;
+}
 
 int modify_raw_data_file(const char *filename) {
     // First, we open the file and collect some of its attributes into a struct

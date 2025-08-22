@@ -13,7 +13,7 @@ LIBS = \
 	-L/usr/local/zlib/lib /usr/local/zlib/lib/libz.a\
 	 -ldl -lm -lsz -lz
 
-all:  compile_writer test
+all:  compile_writer 
 	@echo "done"
 
 .PHONY: clean
@@ -22,7 +22,7 @@ test: compile_writer
 
 
 compile_writer:
-	gcc ${INCLUDES} src/filewriter.c ${CFLAGS} -o hdf.out \
+	gcc ${INCLUDES} src/data_collector.c ${CFLAGS} -o hdf.out \
 		${LIBS}
 
 

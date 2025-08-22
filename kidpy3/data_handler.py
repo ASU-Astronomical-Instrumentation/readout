@@ -2,10 +2,11 @@
 :Authors: - Cody Roberson
           - Jack Sayers
           - Daniel Cunnane
+          - Nia McNichols
 
-:Date: 2024-09-04
+:Date: 2025-08-22
 
-:Version: 3.0.0
+:Version: 3.0.1
 
 Brief overview
 --------------
@@ -19,6 +20,12 @@ RawDataFile
 The RawDataFile class is analogous to standard camera's raw file. Detector data is captured, unprocessed into this file.
 
 
+Changes 3.0.1
+--------------
+- Included Nia's modifications for ONR. Note that this will be deprecated and removed in the future
+    since RawDataFile should be inherited downstream of the library by the end user for their purposes.
+- Modified 'time_ordered_data' dataset chunk size to match sizes with the data_collector c-lib.
+- Added dataset 'pkt_idx' to 'time_ordered_data' group.
 """
 from __future__ import annotations
 __all__ = ['RawDataFile', 'Rfchan']
@@ -169,17 +176,20 @@ class RawDataFile:
         )
         # lo_freq
         # ****************************** Time Ordered Data *****************************
+
+        n_sample = 0
+        chunk_size = 1
         self.adc_i = self.fh.create_dataset(
             "time_ordered_data/adc_i",
             (n_fftbins, n_sample),
-            chunks=(n_fftbins, 488),
+            chunks=(n_fftbins, chunk_size),
             maxshape=(n_fftbins, None),
             dtype=h5py.h5t.STD_I32LE,
         )
         self.adc_q = self.fh.create_dataset(
             "time_ordered_data/adc_q",
             (n_fftbins, n_sample),
-            chunks=(n_fftbins, 488),
+            chunks=(n_fftbins, chunk_size),
             maxshape=(n_fftbins, None),
             dtype=h5py.h5t.STD_I32LE,
         )
@@ -187,7 +197,14 @@ class RawDataFile:
         self.timestamp = self.fh.create_dataset(
             "time_ordered_data/timestamp",
             (n_sample,),
-            chunks=(488,),
+            chunks=(chunk_size,),
+            maxshape=(None,),
+            dtype=h5py.h5t.IEEE_F64LE,
+        )
+        self.pkt_idx = self.fh.create_dataset(
+            "time_ordered_data/pkt_idx",
+            (n_sample,),
+            chunks=(chunk_size,),
             maxshape=(None,),
             dtype=h5py.h5t.IEEE_F64LE,
         )
@@ -379,6 +396,10 @@ class RawDataFile:
             self.adc_q = None
 
         if "/time_ordered_data/timestamp" in self.fh:
+            self.timestamp = self.fh["/time_ordered_data/timestamp"]
+        else:
+            self.timestamp = None
+        if "/time_ordered_data/pkt_idx" in self.fh:
             self.timestamp = self.fh["/time_ordered_data/timestamp"]
         else:
             self.timestamp = None

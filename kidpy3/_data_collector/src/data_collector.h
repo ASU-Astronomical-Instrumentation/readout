@@ -10,8 +10,8 @@
 #include <unistd.h>
 
 typedef int int32_t;
-const int ARRAY_SIZE = 2048;
-const int BUFFER_SIZE = 8208;
+const unsigned int ARRAY_SIZE = 1024;
+const unsigned int BUFFER_SIZE = 8208;
 
 void c_say_hi(void);
 int get_packet(int socketfd, int out_arr[ARRAY_SIZE]);

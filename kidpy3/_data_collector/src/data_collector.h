@@ -11,7 +11,7 @@
 
 typedef int int32_t;
 const unsigned int ARRAY_SIZE = 1024;
-const unsigned int BUFFER_SIZE = 8208;
+#define BUFFER_SIZE 8192
 
 void c_say_hi(void);
 int get_packet(int socketfd, int out_arr[ARRAY_SIZE]);

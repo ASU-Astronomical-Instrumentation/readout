@@ -12,14 +12,14 @@ with h5py.File("test_dataset.h5", 'w') as fd:
         (n_fftbins, n_sample),
         chunks=(n_fftbins, chunk_size),
         maxshape=(n_fftbins, None),
-        dtype=h5py.h5t.NATIVE_INT32,
+        dtype=h5py.h5t.STD_I32LE,
     )
     adc_q = fd.create_dataset(
         "time_ordered_data/adc_q",
         (n_fftbins, n_sample),
         chunks=(n_fftbins, chunk_size),
         maxshape=(n_fftbins, None),
-        dtype=h5py.h5t.NATIVE_INT32,
+        dtype=h5py.h5t.STD_I32LE,
     )
 
     timestamp = fd.create_dataset(

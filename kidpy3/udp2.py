@@ -9,8 +9,9 @@ RED = "\033[0;31m"
 NC = "\033[0m"  # No Color
 logger = logging.getLogger(__name__)
 
-def capture(channels: list, fn=None, *args, **kwargs):
-    pass
+# def capture(channels: list, fn=None, *args, **kwargs):
+def capture(filename, ip, port):
+    return _data_collector.collect_data(filename, ip, port)
 
 def capture_packets(channel: Rfchan, n_packets: int):
     """

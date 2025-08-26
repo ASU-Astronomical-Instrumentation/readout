@@ -22,13 +22,9 @@ test: compile_writer
 
 
 compile_writer:
-	gcc ${INCLUDES} src/data_collector.c ${CFLAGS} -o hdf.out \
+	gcc ${INCLUDES} src/_data_collector.c ${CFLAGS} -o hdf.out \
 		${LIBS}
 
-
-compile_socket:
-	gcc ${INCLUDES} src/interface_socket.c ${CFLAGS} -o sockapp.out \
-		${LIBS}
 
 clean: 
 	rm -f app.out *.o src/*.o hdf.out

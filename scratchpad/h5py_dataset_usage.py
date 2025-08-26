@@ -37,4 +37,3 @@ with h5py.File("test_dataset.h5", 'w') as fd:
         dtype=h5py.h5t.STD_I32LE,
     )
 
-os.system("/usr/local/hdf5/bin/h5dump -H test_dataset.h5")

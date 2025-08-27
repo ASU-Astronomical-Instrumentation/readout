@@ -50,14 +50,14 @@ int c_collect_data(const char *filename, const char *ip_addr, const int port) {
     // Configure/create socket
     memset(&server_addr, 0, sizeof(server_addr));
     server_addr.sin_family = AF_INET;
-    server_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
-    server_addr.sin_port = htons(4096);
+    server_addr.sin_addr.s_addr = inet_addr(ip_addr);
+    server_addr.sin_port = htons(port);
 
     if ((sock_fd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
         return -5; // FIXME set to unique value representing error
     }
 
-    // Open hdf5 file and gather it's parameters/stats
+    // Open hdf5 file and gather its parameters/stats
     df.file = H5Fopen(filename, H5F_ACC_RDWR, H5P_DEFAULT);
     df.grp_tod = H5Gopen2(df.file, "time_ordered_data", H5P_DEFAULT);
 
@@ -84,7 +84,7 @@ int c_collect_data(const char *filename, const char *ip_addr, const int port) {
         df.pkt_idx.dataspace, df.pkt_idx.dim, df.pkt_idx.max_dim);
 
     struct timeval tv;
-    tv.tv_sec = 5;
+    tv.tv_sec = 1;
     tv.tv_usec = 0;
     if (setsockopt(sock_fd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv)) < 0) {
         close(sock_fd);
@@ -108,21 +108,33 @@ int c_collect_data(const char *filename, const char *ip_addr, const int port) {
     int adc_i[ARRAY_SIZE];
     int adc_q[ARRAY_SIZE];
 
-    int counter[1] = {0};
+    uint32_t counter[1] = {0};
     double time[1] = {0.0};
 
     hsize_t current_samp = 0;
+
+    // printf("recv,");
+    // printf("H5Dset_extent,");
+    // printf("H5Sclose,");
+    // printf("H5Dget_space,");
+    // printf("H5Sselect_hyperslab,");
+    // printf("H5Dwrite,");
+    // printf("PKT_IDX\n");
     while(!stop){
+        // struct timespec perf_start, perf_end;
+        // struct timespec pa, pb, pc, pd, pe, pf, pg;
+        // clock_gettime(CLOCK_REALTIME, &perf_start);
         iqdata_t data;
         const hsize_t curr_pos[] = {0, current_samp};
         const hsize_t curr_pos1d[] = {current_samp};
 
         // Use clock_gettime if available
         struct timespec ts;
+
+        // clock_gettime(CLOCK_REALTIME, &pa);
+        const ssize_t bytes_received = recv(sock_fd, data.data, BUFFER_SIZE, MSG_WAITALL);
         clock_gettime(CLOCK_REALTIME, &ts);
         time[0] = (double)ts.tv_sec + (double)ts.tv_nsec / 1.0e9;
-
-        const ssize_t bytes_received = recv(sock_fd, data.data, BUFFER_SIZE, MSG_WAITALL);
         if (bytes_received < 0) {
             return -2;
         }
@@ -137,6 +149,8 @@ int c_collect_data(const char *filename, const char *ip_addr, const int port) {
             adc_i[i] = data.data_int[2*i];
             adc_q[i] = data.data_int[2*i+1];
         }
+        counter[0] = data.data_uint[2049];
+        // clock_gettime(CLOCK_REALTIME, &pb);
 
         // Extend the dataset
         df.i.dim[1] += 1;
@@ -161,32 +175,54 @@ int c_collect_data(const char *filename, const char *ip_addr, const int port) {
             return -9;
         }
 
-
+        // clock_gettime(CLOCK_REALTIME, &pc);
         //Need a better way to write these changes, maybe flush instead of close/reopen?
         H5Sclose(df.i.dataspace);
         H5Sclose(df.q.dataspace);
         H5Sclose(df.ts.dataspace);
         H5Sclose(df.pkt_idx.dataspace);
-
+        // clock_gettime(CLOCK_REALTIME, &pd);
         //reopen, select subset of data to write.
         df.i.dataspace = H5Dget_space(df.i.dataset);
         df.q.dataspace = H5Dget_space(df.q.dataset);
         df.ts.dataspace = H5Dget_space(df.ts.dataset);
         df.pkt_idx.dataspace = H5Dget_space(df.pkt_idx.dataset);
+        // clock_gettime(CLOCK_REALTIME, &pe);
         H5Sselect_hyperslab(df.i.dataspace, H5S_SELECT_SET, curr_pos, NULL, iq_memspace_dim, NULL);
         H5Sselect_hyperslab(df.q.dataspace, H5S_SELECT_SET, curr_pos, NULL, iq_memspace_dim, NULL);
         H5Sselect_hyperslab(df.ts.dataspace, H5S_SELECT_SET, curr_pos1d, NULL, misc_memspace_dim, NULL);
         H5Sselect_hyperslab(df.pkt_idx.dataspace, H5S_SELECT_SET, curr_pos1d, NULL, misc_memspace_dim, NULL);
 
-
+        // clock_gettime(CLOCK_REALTIME, &pf);
         // Write the data
         H5Dwrite(df.i.dataset, df.i.datatype, i_mspace, df.i.dataspace, H5P_DEFAULT, adc_i );
         H5Dwrite(df.q.dataset, df.q.datatype, q_mspace, df.q.dataspace, H5P_DEFAULT, adc_q );
         H5Dwrite(df.ts.dataset, df.ts.datatype, ts_mspace, df.ts.dataspace, H5P_DEFAULT, time );
+
+
         H5Dwrite(df.pkt_idx.dataset, df.pkt_idx.datatype, pktidx_mspace, df.pkt_idx.dataspace, H5P_DEFAULT, counter );
 
-        counter[0] += 1;
+        // clock_gettime(CLOCK_REALTIME, &pg);
+
         current_samp += 1;
+
+
+        // clock_gettime(CLOCK_REALTIME, &perf_end);
+
+        // long int perf_diff = 0;
+        // double ms_diff = 0;
+        // perf_diff = perf_end.tv_nsec - perf_start.tv_nsec;
+        // ms_diff = (double)perf_diff / 1.0e6;
+        // printf("%lf\n", ms_diff);
+        //
+        // printf("%lf,", (double) (pb.tv_nsec - pa.tv_nsec) / 1.0e6);
+        // printf("%lf,", (double) (pc.tv_nsec - pb.tv_nsec) / 1.0e6);
+        // printf("%lf,", (double) (pd.tv_nsec - pc.tv_nsec) / 1.0e6);
+        // printf("%lf,", (double) (pe.tv_nsec - pd.tv_nsec) / 1.0e6);
+        // printf("%lf,", (double) (pf.tv_nsec - pe.tv_nsec) / 1.0e6);
+        // printf("%lf,", (double) (pg.tv_nsec - pf.tv_nsec) / 1.0e6);
+        // printf("%u\n", counter[0]);
+        if (current_samp >= 488*30) break;
     }
     H5Sclose(i_mspace);
     H5Sclose(q_mspace);
@@ -202,9 +238,13 @@ int c_collect_data(const char *filename, const char *ip_addr, const int port) {
 
 #ifndef __BUILD_FOR_LIB__
 int main(int argc, char**argv){
-    const int status = c_collect_data("test_dataset.h5", "127.0.0.1", 4096);
-    printf("c_collect_data returned %d\n", status);
-
+    // if (argc != 2) {
+    //     printf("Usage: %s <output_filename>\n", argv[0]);
+    //     return -1;
+    // }
+    const char* file = "/home/carobers/workspace/readout/scratchpad/test_dataset.h5";
+    // const int status = c_collect_data(argv[1], "192.168.3.40", 4096);
+    const int status = c_collect_data(file, "192.168.3.40", 4096);
     return 0;
 }
 #endif

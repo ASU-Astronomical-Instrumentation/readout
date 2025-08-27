@@ -25,15 +25,16 @@ def collect_data(filename: str, ip_addr: str, port: int) -> int:
     cdef int16_t c_port = port & 0xFFFF
     cdef int result = c_collect_data(c_str_filename, c_str_ip_addr, c_port)
     if result == -1:
-        raise OSError("Did not receive the correct amount of bytes from the data stream")
+        raise OSError(f"[{result}] Did not receive the correct amount of bytes from the data stream")
     elif result == -2:
-        raise OSError("Socket error. Either it was interrupted or timed out.")
+        raise OSError(f"[{result}] Socket error. Either it was interrupted or timed out.")
     elif result == -3:
-        raise OSError("Failed to bind the socket. The port is likely already in use.")
+        raise OSError(f"[{result}] Failed to bind the socket. The port is likely already in use.")
     elif result == -4:
-        raise OSError("Failed to set a timeout on the socket.")
+        raise OSError(f"[{result}] Failed to set a timeout on the socket.")
     elif result == -5:
-        raise OSError("Failed to create/open the socket file descriptor.")
+        raise OSError(f"[{result}] Failed to create/open the socket file descriptor.")
     elif -6 >= result >= -9:
-        raise IOError("Failed to extend the HDF5 Dataset")
+        raise IOError(f"[{result}]"
+                      f" Failed to extend the HDF5 Dataset")
     return result

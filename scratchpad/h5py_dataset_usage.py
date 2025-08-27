@@ -5,7 +5,7 @@ import os
 with h5py.File("test_dataset.h5", 'w') as fd:
     print("Creating dataset")
     n_sample = 0
-    chunk_size = 488
+    chunk_size = 1
     n_fftbins = 1024
     adc_i = fd.create_dataset(
         "time_ordered_data/adc_i",
@@ -34,6 +34,6 @@ with h5py.File("test_dataset.h5", 'w') as fd:
         (n_sample,),
         chunks=(chunk_size,),
         maxshape=(None,),
-        dtype=h5py.h5t.STD_I32LE,
+        dtype=h5py.h5t.STD_U32LE,
     )
 

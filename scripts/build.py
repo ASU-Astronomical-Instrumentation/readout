@@ -11,9 +11,10 @@ def build() -> None:
                             source_files,
                             include_dirs=["_data_collector/src/", "/usr/include/hdf5/serial"],
                             libraries=["hdf5_serial_hl", "hdf5_serial", "dl", "m"],
-                            define_macros=[("__BUILD_FOR_LIB__", "1")]
+                            define_macros=[("__BUILD_FOR_LIB__", "1")],
+                            extra_compile_args=["-O3",  "-pg"],
                             )]
-    ext_modules = cythonize(extensions, annotate=True)
+    ext_modules = cythonize(extensions, annotate=True, verbose=True)
     distribution = Distribution({
         "name": "kidpy3",
         "packages": ["kidpy3"],

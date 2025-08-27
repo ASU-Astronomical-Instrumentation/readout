@@ -1,7 +1,7 @@
 #ifndef DATACOLLECTOR_CYTHON_LIB_
 #define DATACOLLECTOR_CYTHON_LIB_
 
-#include "hdf5.h"
+#include "/usr/include/hdf5/serial/hdf5.h"
 #include <arpa/inet.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -11,7 +11,7 @@
 
 typedef int int32_t;
 #define ARRAY_SIZE 1024
-#define BUFFER_SIZE 8192
+#define BUFFER_SIZE 8208
 
 typedef struct iqdata_t {
     union {

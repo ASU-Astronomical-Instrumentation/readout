@@ -5,16 +5,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="bffb07dd-57d3-41b4-a0f7-5d2f0a4d3209" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/scratchpad/plot_deltas.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/kidpy3/_data_collector/data_collector.pyx" beforeDir="false" afterPath="$PROJECT_DIR$/kidpy3/_data_collector/data_collector.pyx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/kidpy3/_data_collector/makefile" beforeDir="false" afterPath="$PROJECT_DIR$/kidpy3/_data_collector/makefile" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/kidpy3/_data_collector/src/_data_collector.c" beforeDir="false" afterPath="$PROJECT_DIR$/kidpy3/_data_collector/src/_data_collector.c" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/kidpy3/_data_collector/src/_data_collector.h" beforeDir="false" afterPath="$PROJECT_DIR$/kidpy3/_data_collector/src/_data_collector.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/kidpy3/udp2.py" beforeDir="false" afterPath="$PROJECT_DIR$/kidpy3/udp2.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/scratchpad/h5py_dataset_usage.py" beforeDir="false" afterPath="$PROJECT_DIR$/scratchpad/h5py_dataset_usage.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/scratchpad/test_hdf5.py" beforeDir="false" afterPath="$PROJECT_DIR$/scratchpad/test_hdf5.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/scripts/build.py" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/build.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/scratchpad/plot_deltas.py" beforeDir="false" afterPath="$PROJECT_DIR$/scratchpad/plot_deltas.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -41,30 +34,30 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;Python.build.executor&quot;: &quot;Run&quot;,
-    &quot;Python.build_ext.executor&quot;: &quot;Run&quot;,
-    &quot;Python.h5py_dataset_usage.executor&quot;: &quot;Run&quot;,
-    &quot;Python.plot_deltas.executor&quot;: &quot;Run&quot;,
-    &quot;Python.run test_hdf5lib.executor&quot;: &quot;Run&quot;,
-    &quot;Python.test_hdf5.executor&quot;: &quot;Run&quot;,
-    &quot;Python.test_packet_generator.executor&quot;: &quot;Run&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;c__datacap&quot;,
-    &quot;junie.onboarding.icon.badge.shown&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;/home/carobers/workspace/readout/scratchpad&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable&quot;,
-    &quot;to.speed.mode.migration.done&quot;: &quot;true&quot;,
-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Python.build.executor": "Run",
+    "Python.build_ext.executor": "Run",
+    "Python.h5py_dataset_usage.executor": "Run",
+    "Python.plot_deltas.executor": "Run",
+    "Python.run test_hdf5lib.executor": "Run",
+    "Python.test_hdf5.executor": "Run",
+    "Python.test_packet_generator.executor": "Run",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
+    "git-widget-placeholder": "c__datacap",
+    "junie.onboarding.icon.badge.shown": "true",
+    "last_opened_file_path": "/home/carobers/workspace/readout/scratchpad",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "settings.editor.selected.configurable": "preferences.keymap",
+    "to.speed.mode.migration.done": "true",
+    "vue.rearranger.settings.migration": "true"
   }
-}</component>
+}]]></component>
   <component name="RdControllerToolWindowsLayoutState" isNewUi="true">
     <layout>
       <window_info content_ui="combo" id="Project" order="0" weight="0.25" />
@@ -226,7 +219,7 @@
       <workItem from="1756230864964" duration="1175000" />
       <workItem from="1756232048516" duration="15037000" />
       <workItem from="1756248524793" duration="6466000" />
-      <workItem from="1756255310437" duration="4467000" />
+      <workItem from="1756255310437" duration="7550000" />
     </task>
     <servers />
   </component>
@@ -247,9 +240,9 @@
     <SUITE FILE_PATH="coverage/readout$test_packet_generator.coverage" NAME="test_packet_generator Coverage Results" MODIFIED="1756244688192" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/scratchpad" />
     <SUITE FILE_PATH="coverage/readout$run_test_hdf5lib.coverage" NAME="run test_hdf5lib Coverage Results" MODIFIED="1756254442021" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/scratchpad" />
     <SUITE FILE_PATH="coverage/readout$build_ext.coverage" NAME="build_ext Coverage Results" MODIFIED="1756254441642" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/readout$h5py_dataset_usage.coverage" NAME="h5py_dataset_usage Coverage Results" MODIFIED="1756259215494" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/scratchpad" />
-    <SUITE FILE_PATH="coverage/readout$plot_deltas.coverage" NAME="plot_deltas Coverage Results" MODIFIED="1756259450889" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/scratchpad" />
+    <SUITE FILE_PATH="coverage/readout$h5py_dataset_usage.coverage" NAME="h5py_dataset_usage Coverage Results" MODIFIED="1756262130314" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/scratchpad" />
+    <SUITE FILE_PATH="coverage/readout$plot_deltas.coverage" NAME="plot_deltas Coverage Results" MODIFIED="1756261576256" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/scratchpad" />
     <SUITE FILE_PATH="coverage/readout$build.coverage" NAME="build Coverage Results" MODIFIED="1756238943188" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/scripts" />
-    <SUITE FILE_PATH="coverage/readout$test_hdf5.coverage" NAME="test_hdf5 Coverage Results" MODIFIED="1756259219013" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/scratchpad" />
+    <SUITE FILE_PATH="coverage/readout$test_hdf5.coverage" NAME="test_hdf5 Coverage Results" MODIFIED="1756262134121" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/scratchpad" />
   </component>
 </project>

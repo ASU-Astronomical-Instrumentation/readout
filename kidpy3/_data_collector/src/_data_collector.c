@@ -110,20 +110,10 @@ int c_collect_data(const char *filename, const char *ip_addr, const int port) {
 
     uint32_t counter[1] = {0};
     double time[1] = {0.0};
-
     hsize_t current_samp = 0;
 
-    // printf("recv,");
-    // printf("H5Dset_extent,");
-    // printf("H5Sclose,");
-    // printf("H5Dget_space,");
-    // printf("H5Sselect_hyperslab,");
-    // printf("H5Dwrite,");
-    // printf("PKT_IDX\n");
     while(!stop){
-        // struct timespec perf_start, perf_end;
-        // struct timespec pa, pb, pc, pd, pe, pf, pg;
-        // clock_gettime(CLOCK_REALTIME, &perf_start);
+
         iqdata_t data;
         const hsize_t curr_pos[] = {0, current_samp};
         const hsize_t curr_pos1d[] = {current_samp};
@@ -131,7 +121,7 @@ int c_collect_data(const char *filename, const char *ip_addr, const int port) {
         // Use clock_gettime if available
         struct timespec ts;
 
-        // clock_gettime(CLOCK_REALTIME, &pa);
+
         const ssize_t bytes_received = recv(sock_fd, data.data, BUFFER_SIZE, MSG_WAITALL);
         clock_gettime(CLOCK_REALTIME, &ts);
         time[0] = (double)ts.tv_sec + (double)ts.tv_nsec / 1.0e9;
@@ -150,7 +140,7 @@ int c_collect_data(const char *filename, const char *ip_addr, const int port) {
             adc_q[i] = data.data_int[2*i+1];
         }
         counter[0] = data.data_uint[2049];
-        // clock_gettime(CLOCK_REALTIME, &pb);
+
 
         // Extend the dataset
         df.i.dim[1] += 1;
@@ -175,54 +165,32 @@ int c_collect_data(const char *filename, const char *ip_addr, const int port) {
             return -9;
         }
 
-        // clock_gettime(CLOCK_REALTIME, &pc);
+
         //Need a better way to write these changes, maybe flush instead of close/reopen?
         H5Sclose(df.i.dataspace);
         H5Sclose(df.q.dataspace);
         H5Sclose(df.ts.dataspace);
         H5Sclose(df.pkt_idx.dataspace);
-        // clock_gettime(CLOCK_REALTIME, &pd);
-        //reopen, select subset of data to write.
+
+
         df.i.dataspace = H5Dget_space(df.i.dataset);
         df.q.dataspace = H5Dget_space(df.q.dataset);
         df.ts.dataspace = H5Dget_space(df.ts.dataset);
         df.pkt_idx.dataspace = H5Dget_space(df.pkt_idx.dataset);
-        // clock_gettime(CLOCK_REALTIME, &pe);
+
         H5Sselect_hyperslab(df.i.dataspace, H5S_SELECT_SET, curr_pos, NULL, iq_memspace_dim, NULL);
         H5Sselect_hyperslab(df.q.dataspace, H5S_SELECT_SET, curr_pos, NULL, iq_memspace_dim, NULL);
         H5Sselect_hyperslab(df.ts.dataspace, H5S_SELECT_SET, curr_pos1d, NULL, misc_memspace_dim, NULL);
         H5Sselect_hyperslab(df.pkt_idx.dataspace, H5S_SELECT_SET, curr_pos1d, NULL, misc_memspace_dim, NULL);
 
-        // clock_gettime(CLOCK_REALTIME, &pf);
         // Write the data
         H5Dwrite(df.i.dataset, df.i.datatype, i_mspace, df.i.dataspace, H5P_DEFAULT, adc_i );
         H5Dwrite(df.q.dataset, df.q.datatype, q_mspace, df.q.dataspace, H5P_DEFAULT, adc_q );
         H5Dwrite(df.ts.dataset, df.ts.datatype, ts_mspace, df.ts.dataspace, H5P_DEFAULT, time );
-
-
         H5Dwrite(df.pkt_idx.dataset, df.pkt_idx.datatype, pktidx_mspace, df.pkt_idx.dataspace, H5P_DEFAULT, counter );
 
-        // clock_gettime(CLOCK_REALTIME, &pg);
 
         current_samp += 1;
-
-
-        // clock_gettime(CLOCK_REALTIME, &perf_end);
-
-        // long int perf_diff = 0;
-        // double ms_diff = 0;
-        // perf_diff = perf_end.tv_nsec - perf_start.tv_nsec;
-        // ms_diff = (double)perf_diff / 1.0e6;
-        // printf("%lf\n", ms_diff);
-        //
-        // printf("%lf,", (double) (pb.tv_nsec - pa.tv_nsec) / 1.0e6);
-        // printf("%lf,", (double) (pc.tv_nsec - pb.tv_nsec) / 1.0e6);
-        // printf("%lf,", (double) (pd.tv_nsec - pc.tv_nsec) / 1.0e6);
-        // printf("%lf,", (double) (pe.tv_nsec - pd.tv_nsec) / 1.0e6);
-        // printf("%lf,", (double) (pf.tv_nsec - pe.tv_nsec) / 1.0e6);
-        // printf("%lf,", (double) (pg.tv_nsec - pf.tv_nsec) / 1.0e6);
-        // printf("%u\n", counter[0]);
-        if (current_samp >= 488*30) break;
     }
     H5Sclose(i_mspace);
     H5Sclose(q_mspace);

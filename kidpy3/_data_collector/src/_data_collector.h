@@ -1,7 +1,7 @@
 #ifndef DATACOLLECTOR_CYTHON_LIB_
 #define DATACOLLECTOR_CYTHON_LIB_
 
-#include "/usr/include/hdf5/serial/hdf5.h"
+#include "hdf5.h"
 #include <arpa/inet.h>
 #include <stdint.h>
 #include <stdio.h>

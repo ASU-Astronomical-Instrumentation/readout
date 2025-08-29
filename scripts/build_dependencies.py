@@ -1,6 +1,5 @@
 import glob
 import os
-import tqdm
 import requests
 import zipfile
 import tarfile

@@ -5,9 +5,88 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="bffb07dd-57d3-41b4-a0f7-5d2f0a4d3209" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5ACpublic.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5Apublic.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5Cpublic.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5DOpublic.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5DSpublic.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5Dpublic.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5ESdevelop.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5ESpublic.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5Epubgen.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5Epublic.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5FDcore.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5FDdevelop.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5FDdirect.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5FDfamily.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5FDhdfs.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5FDioc.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5FDlog.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5FDmirror.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5FDmpi.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5FDmpio.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5FDmulti.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5FDonion.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5FDpublic.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5FDros3.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5FDsec2.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5FDsplitter.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5FDstdio.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5FDsubfiling.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5FDwindows.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5Fpublic.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5Gpublic.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5IMpublic.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5Idevelop.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5Ipublic.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5LDpublic.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5LTpublic.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5Ldevelop.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5Lpublic.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5MMpublic.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5Mpublic.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5Opublic.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5PLextern.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5PLpublic.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5PTpublic.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5Ppublic.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5Rpublic.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5Spublic.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5TBpublic.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5TSdevelop.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5Tdevelop.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5Tpublic.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5VLconnector.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5VLconnector_passthru.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5VLnative.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5VLpassthru.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5VLpublic.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5Zdevelop.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5Zpublic.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5api_adpt.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5overflow.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5pubconf.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5public.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5version.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/hdf5.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/hdf5_hl.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/kidpy3/lib/libhdf5.so" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/kidpy3/lib/libhdf5.so.310" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/kidpy3/lib/libhdf5.so.310.5.1" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/kidpy3/lib/libhdf5_cpp.so" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/kidpy3/lib/libhdf5_cpp.so.310" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/kidpy3/lib/libhdf5_cpp.so.310.0.6" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/kidpy3/lib/libhdf5_hl.so" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/kidpy3/lib/libhdf5_hl.so.310" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/kidpy3/lib/libhdf5_hl.so.310.0.6" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/kidpy3/lib/libhdf5_hl_cpp.so" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/kidpy3/lib/libhdf5_hl_cpp.so.310" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/kidpy3/lib/libhdf5_hl_cpp.so.310.0.6" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/kidpy3/lib/libhdf5_tools.so" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/kidpy3/lib/libhdf5_tools.so.310" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/kidpy3/lib/libhdf5_tools.so.310.0.6" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/kidpy3/_data_collector/src/_data_collector.c" beforeDir="false" afterPath="$PROJECT_DIR$/kidpy3/_data_collector/src/_data_collector.c" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/scratchpad/plot_deltas.py" beforeDir="false" afterPath="$PROJECT_DIR$/scratchpad/plot_deltas.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/build_dependencies.py" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/build_dependencies.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -47,7 +126,7 @@
     "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
     "git-widget-placeholder": "c__datacap",
     "junie.onboarding.icon.badge.shown": "true",
-    "last_opened_file_path": "/home/carobers/workspace/readout/scratchpad",
+    "last_opened_file_path": "/home/carobers/workspace/readout/dist/kidpy3/lib",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
@@ -60,32 +139,53 @@
 }]]></component>
   <component name="RdControllerToolWindowsLayoutState" isNewUi="true">
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" weight="0.25" />
+      <window_info id="Bookmarks" side_tool="true" />
+      <window_info id="Merge Requests" />
+      <window_info id="AI Playground" side_tool="true" />
+      <window_info id="Backup and Sync History" />
+      <window_info id="Commit_Guest" show_stripe_button="false" />
+      <window_info id="Pull Requests" />
+      <window_info id="Learn" />
+      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.22666335" />
       <window_info id="Commit" order="1" weight="0.25" />
       <window_info id="Structure" order="2" side_tool="true" weight="0.25" />
       <window_info anchor="bottom" id="Database Changes" />
-      <window_info anchor="bottom" id="Version Control" order="0" />
+      <window_info anchor="bottom" id="TypeScript" />
+      <window_info anchor="bottom" id="TODO" />
+      <window_info anchor="bottom" id="File Transfer" />
+      <window_info anchor="bottom" id="HfCacheToolWindow" />
+      <window_info anchor="bottom" id="Find" />
+      <window_info anchor="bottom" id="Version Control" order="0" weight="0.41630745" />
       <window_info anchor="bottom" id="Problems" order="1" />
       <window_info anchor="bottom" id="Problems View" order="2" />
-      <window_info anchor="bottom" id="Terminal" order="3" />
-      <window_info anchor="bottom" id="Services" order="4" />
+      <window_info anchor="bottom" id="Services" order="3" />
+      <window_info active="true" anchor="bottom" id="Terminal" order="4" visible="true" weight="0.36125088" />
       <window_info anchor="bottom" id="Python Packages" order="5" weight="0.1" />
       <window_info anchor="bottom" id="Python Console" order="6" weight="0.1" />
+      <window_info anchor="bottom" id="Run" order="7" weight="0.41630745" />
+      <window_info anchor="right" id="PR AI Assistant" />
+      <window_info anchor="right" id="Endpoints" />
+      <window_info anchor="right" id="Material Theme: Favorite Themes Shuffle" side_tool="true" />
+      <window_info anchor="right" id="Coverage" side_tool="true" />
+      <window_info anchor="right" id="SciView" />
+      <window_info anchor="right" id="Jupyter Variables" side_tool="true" />
       <window_info anchor="right" content_ui="combo" id="Notifications" order="0" weight="0.25" />
       <window_info anchor="right" id="AIAssistant" order="1" weight="0.25" />
       <window_info anchor="right" id="Database" order="2" weight="0.25" />
       <window_info anchor="right" id="Gradle" order="3" weight="0.25" />
       <window_info anchor="right" id="Maven" order="4" weight="0.25" />
       <window_info anchor="right" id="Plots" order="5" weight="0.1" />
+      <window_info anchor="right" id="ElectroJunToolWindow" order="6" weight="0.32984102" />
     </layout>
   </component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/dist/kidpy3/lib" />
       <recent name="$PROJECT_DIR$/scratchpad" />
       <recent name="$PROJECT_DIR$/kidpy3/_data_collector" />
     </key>
   </component>
-  <component name="RunManager">
+  <component name="RunManager" selected="Python.run test_hdf5lib">
     <configuration name="build_ext" type="PythonConfigurationType" factoryName="Python">
       <module name="readout" />
       <option name="ENV_FILES" value="" />
@@ -95,7 +195,6 @@
         <env name="PYTHONUNBUFFERED" value="1" />
       </envs>
       <option name="SDK_HOME" value="" />
-      <option name="SDK_NAME" value="Poetry (readout)" />
       <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
       <option name="IS_MODULE_SDK" value="false" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
@@ -165,7 +264,6 @@
         <env name="PYTHONUNBUFFERED" value="1" />
       </envs>
       <option name="SDK_HOME" value="" />
-      <option name="SDK_NAME" value="Poetry (readout)" />
       <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/scratchpad" />
       <option name="IS_MODULE_SDK" value="false" />
       <option name="ADD_CONTENT_ROOTS" value="true" />

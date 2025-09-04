@@ -16,6 +16,11 @@ void c_say_hi(void) {
     printf("Hello from C!\n");
 }
 void close_hdf5_handles(const raw_data_t *df) {
+    H5Sclose(df->i_mem_space);
+    H5Sclose(df->q_mem_space);
+    H5Sclose(df->ts_mem_space);
+    H5Sclose(df->pkt_idx_mem_space);
+
     H5Tclose(df->i.datatype);
     H5Dclose(df->i.dataset);
 
@@ -34,6 +39,7 @@ void close_hdf5_handles(const raw_data_t *df) {
 int c_collect_data(const char *filename, const char *ip_addr, const int port) {
     // This function is intended to be a child of a python interpreter. The parent needs to kill us gracefully.
     // NOTE: This might actually be bad if the caller also changes how signals behave.
+
     struct sigaction sa;
     sa.sa_handler = handle_sig;
     sigemptyset(&sa.sa_mask);
@@ -100,10 +106,10 @@ int c_collect_data(const char *filename, const char *ip_addr, const int port) {
 
     const hsize_t iq_memspace_dim[2] = {1024, 1};
     const hsize_t misc_memspace_dim[1] = {1};
-    hid_t i_mspace = H5Screate_simple(2, iq_memspace_dim, NULL);
-    hid_t q_mspace = H5Screate_simple(2, iq_memspace_dim, NULL);
-    hid_t ts_mspace = H5Screate_simple(1, misc_memspace_dim, NULL);
-    hid_t pktidx_mspace = H5Screate_simple(1, misc_memspace_dim, NULL);
+    df.i_mem_space = H5Screate_simple(2, iq_memspace_dim, NULL);
+    df.q_mem_space = H5Screate_simple(2, iq_memspace_dim, NULL);
+    df.ts_mem_space = H5Screate_simple(1, misc_memspace_dim, NULL);
+    df.pkt_idx_mem_space = H5Screate_simple(1, misc_memspace_dim, NULL);
 
     int adc_i[ARRAY_SIZE];
     int adc_q[ARRAY_SIZE];
@@ -121,14 +127,24 @@ int c_collect_data(const char *filename, const char *ip_addr, const int port) {
         // Use clock_gettime if available
         struct timespec ts;
 
-
         const ssize_t bytes_received = recv(sock_fd, data.data, BUFFER_SIZE, MSG_WAITALL);
         clock_gettime(CLOCK_REALTIME, &ts);
         time[0] = (double)ts.tv_sec + (double)ts.tv_nsec / 1.0e9;
         if (bytes_received < 0) {
-            return -2;
+            H5Fflush(df.file, H5F_SCOPE_LOCAL);
+            close(sock_fd);
+            close_hdf5_handles(&df);
+            if (stop == 1) {
+                /*We're much more likely to interrupt the socket while it waits than the rest of the
+                program, which makes it falsely return an error since we interrupt a syscall*/
+                return 0;
+            }else {
+                return -2;
+            }
         }
         if (bytes_received != BUFFER_SIZE) {
+            close(sock_fd);
+            close_hdf5_handles(&df);
             return -1;
         }
 
@@ -150,18 +166,26 @@ int c_collect_data(const char *filename, const char *ip_addr, const int port) {
 
         status = H5Dset_extent(df.i.dataset, df.i.dim);
         if (status < 0) {
+            close(sock_fd);
+            close_hdf5_handles(&df);
             return -6;
         }
         status = H5Dset_extent(df.q.dataset, df.q.dim);
         if (status < 0) {
+            close(sock_fd);
+            close_hdf5_handles(&df);
             return -7;
         }
         status = H5Dset_extent(df.ts.dataset, df.ts.dim);
         if (status < 0) {
+            close(sock_fd);
+            close_hdf5_handles(&df);
             return -8;
         }
         status = H5Dset_extent(df.pkt_idx.dataset, df.ts.dim);
         if (status < 0) {
+            close(sock_fd);
+            close_hdf5_handles(&df);
             return -9;
         }
 
@@ -184,19 +208,15 @@ int c_collect_data(const char *filename, const char *ip_addr, const int port) {
         H5Sselect_hyperslab(df.pkt_idx.dataspace, H5S_SELECT_SET, curr_pos1d, NULL, misc_memspace_dim, NULL);
 
         // Write the data
-        H5Dwrite(df.i.dataset, df.i.datatype, i_mspace, df.i.dataspace, H5P_DEFAULT, adc_i );
-        H5Dwrite(df.q.dataset, df.q.datatype, q_mspace, df.q.dataspace, H5P_DEFAULT, adc_q );
-        H5Dwrite(df.ts.dataset, df.ts.datatype, ts_mspace, df.ts.dataspace, H5P_DEFAULT, time );
-        H5Dwrite(df.pkt_idx.dataset, df.pkt_idx.datatype, pktidx_mspace, df.pkt_idx.dataspace, H5P_DEFAULT, counter );
+        H5Dwrite(df.i.dataset, df.i.datatype, df.i_mem_space, df.i.dataspace, H5P_DEFAULT, adc_i );
+        H5Dwrite(df.q.dataset, df.q.datatype, df.q_mem_space, df.q.dataspace, H5P_DEFAULT, adc_q );
+        H5Dwrite(df.ts.dataset, df.ts.datatype, df.ts_mem_space, df.ts.dataspace, H5P_DEFAULT, time );
+        H5Dwrite(df.pkt_idx.dataset, df.pkt_idx.datatype, df.pkt_idx_mem_space, df.pkt_idx.dataspace, H5P_DEFAULT, counter );
 
 
         current_samp += 1;
     }
-    H5Sclose(i_mspace);
-    H5Sclose(q_mspace);
-    H5Sclose(ts_mspace);
-    H5Sclose(pktidx_mspace);
-
+    close(sock_fd);
     close_hdf5_handles(&df);
     
     

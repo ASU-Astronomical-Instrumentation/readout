@@ -1,7 +1,7 @@
 #ifndef DATACOLLECTOR_CYTHON_LIB_
 #define DATACOLLECTOR_CYTHON_LIB_
 
-#include "hdf5.h"
+#include <hdf5.h>
 #include <arpa/inet.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -49,9 +49,13 @@ typedef struct raw_data_t {
     struct dset_2D q;
     struct dset_1D ts;
     struct dset_1D pkt_idx;
+    hid_t i_mem_space;
+    hid_t q_mem_space;
+    hid_t ts_mem_space;
+    hid_t pkt_idx_mem_space;
 } raw_data_t;
 
 void c_say_hi(void);
-int c_collect_data(const char *filename, const char *ip_addr, const int port);
+int c_collect_data(const char *filename, const char *ip_addr, int port);
 
 #endif

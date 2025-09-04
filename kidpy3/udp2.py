@@ -1,31 +1,85 @@
-import _data_collector
+from _data_collector import collect_data, say_hello
+from .data_handler import get_last_lo
 from .data_handler import Rfchan
 from .data_handler import RawDataFile
+import signal
 import numpy as np
 import logging
+import multiprocessing as mproc
 import socket
+from typing import List
+import os
 
-RED = "\033[0;31m"
-NC = "\033[0m"  # No Color
 logger = logging.getLogger(__name__)
-def capture(filename, ip, port):
-    return _data_collector.collect_data(filename, ip, port)
-# def capture(channels: list, fn=None, *args, **kwargs):
-#     """
-#
-#     :param channels:
-#     :param fn:
-#     :param args:
-#     :param kwargs:
-#     :return:
-#     """
-#
-#     # return _data_collector.collect_data(filename, ip, port)
+
+def capture(channels: List[Rfchan], fn=None, *args, **kwargs):
+    """
+    Captures UDP streams to a data file.
+    :param channels: List of RfChan objects which can be pulled from data_handler.py
+    :param fn: Function to execute in the foreground while steaming data is recorded.
+    :param args: Provide a list of arguments to be passed to the function.
+    :param kwargs:
+    :return:
+    :raises ValueError:
+    """
+    if fn is None: raise ValueError("fn must be provided, otherwise nothing will happen." 
+                                    "Hint: time.sleep(...) is sufficient if no fn is desired.")
+
+    file_list = []
+    for chan in channels: file_list.append(chan.raw_filename)
+    if len(file_list) != len(set(file_list)):
+        raise ValueError("Non unique raw filenames provided. "
+            "We can't save data from multiple channels to the same file.")
+
+    # Validate inputs
+    if channels is None or len(channels) == 0:
+        raise ValueError("channels must be a list of RfChan objects")
+
+    process_list: List[mproc.Process] = []
+    result = None
+
+    # Ensure all sockets are openable and data is streaming. This will raise an exception if not.
+    for chan in channels:
+        logger.debug(f"Testing socket connection to {chan.ip}:{chan.port}")
+        capture_packets(chan, 1)
+
+    logger.debug("Creating and populating blank RawDataFiles and blank datasets for each channel")
+
+    # Create and Populate blank RawDataFiles and blank datasets for each channel
+    for chan in channels:
+        rdf = RawDataFile(chan.raw_filename, 'w')
+        rdf.format(chan.n_sample, chan.n_tones, chan.n_fftbins)
+        rdf.set_global_data(chan)
+        rdf.append_lo_sweep(get_last_lo(chan.raw_filename))
+        rdf.close()
+
+
+    # Launch a subprocess for each channel. Call user provided function in the foreground.
+    # Close out the processes when the user-provided function returns.
+    logger.info("Launching data collection processes")
+    with mproc.Manager() as manager:
+        for chan in channels:
+            new_process = mproc.Process(target=collect_data, args=(chan.raw_filename, chan.ip, chan.port))
+            logger.debug(f"Starting data collection process for {chan.ip}")
+            new_process.start()
+            process_list.append(new_process)
+
+        result = fn(*args, **kwargs)
+
+        logger.info("User provided function finished. Signaling data collection processes to exit")
+        for process in process_list:
+            os.kill(process.pid, signal.SIGINT)
+            process.join(timeout=2)
+            logger.debug(
+                f"Process {process.pid} joined with exit code {process.exitcode}"
+            )
+    return result
+
 
 def capture_packets(channel: Rfchan, n_packets: int):
     """
-    Captures to memmory instead of to a file, returning the result.
-    Usefull for developing functions like LO sweep
+    Captures to memory instead of to a file, returning the result.
+    Useful for developing functions like LO sweep
     """
     log = logger.getChild(__name__)
     soc = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -39,11 +93,10 @@ def capture_packets(channel: Rfchan, n_packets: int):
 
     def parse_packet():
         try:
-            soc.settimeout(1)
+            soc.settimeout(2)
             data = soc.recv(8208 * 1)
             if len(data) < 8000:
-                print("invalid packet recieved")
-                return
+                raise OSError("Received incomplete packet")
             datarray = bytearray(data)
 
             # now allow a shift of the bytes
@@ -58,6 +111,7 @@ def capture_packets(channel: Rfchan, n_packets: int):
                 + "\n3. In the OS, is an MTU of 9000 set for this ethernet interface?"
                 + "\n4. Are both the Ip source and destination addresses correct?"
             )
+            raise
 
     packets = np.zeros(shape=(2052, n_packets))
 
@@ -68,4 +122,10 @@ def capture_packets(channel: Rfchan, n_packets: int):
     return packets
 
 def hi():
-    _data_collector.say_hello()
+    say_hello()
+
+
+class OrGate:
+    def __init__(self, food):
+        self.burrito = food
+

@@ -4,6 +4,7 @@ previously implemented in python.
 """
 import ipaddress
 from libc.stdint cimport int16_t
+
 import os
 cdef extern from "src/_data_collector.h" nogil:
     void c_say_hi()
@@ -12,14 +13,14 @@ cdef extern from "src/_data_collector.h" nogil:
 def say_hello():
     c_say_hi()
 
-def collect_data(filename: str, ip_addr: str, port: int) -> int:
+def collect_data(filename: str, ip_addr: str, int port) -> int:
     assert os.path.exists(filename), "File does not exist. This function requires a valid, already formatted HDF5 file."
     _ = ipaddress.IPv4Address(ip_addr) # check if it's a valid IPv4 address string
 
-    cdef bytes b_filename = filename.encode("utf-8")
+    cdef bytes b_filename = filename.encode("ascii")
     cdef const char *c_str_filename = <char*>b_filename
 
-    cdef bytes b_ipaddr = ip_addr.encode("utf-8")
+    cdef bytes b_ipaddr = ip_addr.encode("ascii")
     cdef const char *c_str_ip_addr = <char*>b_ipaddr
 
     cdef int16_t c_port = port & 0xFFFF

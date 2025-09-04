@@ -10,14 +10,10 @@
 
 Brief overview
 --------------
-Here we define the data types and format that is utilized throughout the project.
+Here we define the data types and formats that are used throughout the project.
 Our primary observation data is stored using HDF5  `HDF5 <https://www.hdfgroup.org/solutions/hdf5/>`_
 via the `h5py python library <https://www.h5py.org/>`_
 
-
-RawDataFile
---------------
-The RawDataFile class is analogous to standard camera's raw file. Detector data is captured, unprocessed into this file.
 
 
 Changes 3.0.1
@@ -26,27 +22,24 @@ Changes 3.0.1
     since RawDataFile should be inherited downstream of the library by the end user for their purposes.
 - Modified 'time_ordered_data' dataset chunk size to match sizes with the data_collector c-lib.
 - Added dataset 'pkt_idx' to 'time_ordered_data' group.
+- Included Nia's changes to
+    - RawDataFile.set_global_data()
+- Added 'has_lo_sweep' attribute to group 'global_data'
+
 """
 from __future__ import annotations
-__all__ = ['RawDataFile', 'Rfchan']
-
-from typing import Any
-
 import h5py
-import os
 import logging
 import numpy as np
 import numpy.typing as npt
 from datetime import date
 from pathlib import Path
-
-import omegaconf
-from omegaconf import OmegaConf
 from dataclasses import dataclass, field
 import glob
-
 logger = logging.getLogger(__name__)
 
+__all__ = ['RawDataFile', 'Rfchan']
+DEFAULT_PARAMS_DIRECTORY = '/data/params'
 
 class RawDataFile:
     """A raw hdf5 data file object for incoming rfsoc-UDP data streams.
@@ -99,6 +92,7 @@ class RawDataFile:
         """
         # ********************************* Dimensions *******************************
         GD = "global_data/"
+        self.global_data_grp = self.fh.create_group(GD)
         self.n_sample = self.fh.create_dataset(
             "dimension/n_sample",
             (1,),
@@ -177,36 +171,37 @@ class RawDataFile:
         # lo_freq
         # ****************************** Time Ordered Data *****************************
 
-        n_sample = 0
-        chunk_size = 1
+        const_n_sample = 0
+        const_chunk_size = 1
+        const_n_fftbins = 1024
         self.adc_i = self.fh.create_dataset(
             "time_ordered_data/adc_i",
-            (n_fftbins, n_sample),
-            chunks=(n_fftbins, chunk_size),
-            maxshape=(n_fftbins, None),
+            (const_n_fftbins, const_n_sample),
+            chunks=(const_n_fftbins, const_chunk_size),
+            maxshape=(const_n_fftbins, None),
             dtype=h5py.h5t.STD_I32LE,
         )
         self.adc_q = self.fh.create_dataset(
             "time_ordered_data/adc_q",
-            (n_fftbins, n_sample),
-            chunks=(n_fftbins, chunk_size),
-            maxshape=(n_fftbins, None),
+            (const_n_fftbins, const_n_sample),
+            chunks=(const_n_fftbins, const_chunk_size),
+            maxshape=(const_n_fftbins, None),
             dtype=h5py.h5t.STD_I32LE,
         )
 
         self.timestamp = self.fh.create_dataset(
             "time_ordered_data/timestamp",
-            (n_sample,),
-            chunks=(chunk_size,),
+            (const_n_sample,),
+            chunks=(const_chunk_size,),
             maxshape=(None,),
             dtype=h5py.h5t.IEEE_F64LE,
         )
         self.pkt_idx = self.fh.create_dataset(
             "time_ordered_data/pkt_idx",
-            (n_sample,),
-            chunks=(chunk_size,),
+            (const_n_sample,),
+            chunks=(const_chunk_size,),
             maxshape=(None,),
-            dtype=h5py.h5t.IEEE_F64LE,
+            dtype=h5py.h5t.STD_U32LE,
         )
         self.fh.flush()
 
@@ -220,45 +215,51 @@ class RawDataFile:
         self.adc_q.resize((1024, n_sample))
         self.timestamp.resize((n_sample,))
 
-    def set_global_data(self, chan: Rfchan):
-        self.attenuator_settings[:] = chan.attenuator_settings
+    def set_global_data(self, chan: Rfchan, params_dir: str=DEFAULT_PARAMS_DIRECTORY):
+
+        params_tile_file = Path(f'{params_dir}/params_tile_{chan.tile_name}.h5')
+
+        # Load values from params file if it exists
+        if params_tile_file.exists():
+            log = logger.getChild(__name__)
+            log.debug(f"Using params file: {params_tile_file}")
+            with h5py.File(params_tile_file, 'r') as params_fh:
+                chanmask = params_fh['chanmask'][:]
+                tone_powers = params_fh['tone_powers'][:]
+                baseband_freqs = params_fh['baseband_freqs'][:]
+                lo_freq = params_fh['lo_freq'][()]
+                detdx = params_fh['detector_delta_x'][:]
+                detdy = params_fh['detector_delta_y'][:]
+                det_ba = params_fh['detector_beam_ampl'][:]
+                det_pol = params_fh['detector_pol'][:]
+                dfoverf_per_mK = params_fh['dfoverf_per_mK'][:]
+
+            self.chanmask[:] = chanmask
+            self.baseband_freqs[:] = baseband_freqs
+            self.tone_powers[:] = tone_powers
+            self.lo_freq[0] = lo_freq
+            self.detector_delta_x[:] = detdx
+            self.detector_delta_y[:] = detdy
+            self.detector_beam_ampl[:] = det_ba
+            self.detector_pol[:] = det_pol
+            self.dfoverf_per_mK[:] = dfoverf_per_mK
+
+        # FIXME: THESE PARAMETERS ARE NOT GUARANTEED TO EXIST AND WILL CAUSE A CRASH IN NON-ONR SYSTEMS
+        # Use current channel attributes to set global data, taking precedence over params file
         self.baseband_freqs[:] = chan.baseband_freqs
+        self.tone_powers[:] = chan.tone_powers
+        self.lo_freq[0] = chan.lo_freq
+        self.chanmask[:] = chan.chanmask
+
+        # Update misc values
+        self.attenuator_settings[:] = chan.attenuator_settings
         self.sample_rate[0] = chan.sample_rate
         self.tile_number[:] = chan.tile_number
-        self.tone_powers[:] = chan.tone_powers
         self.chan_number[:] = chan.chan_number
         self.ifslice_number[:] = chan.ifslice_number
         self.n_attenuators[0] = chan.n_attenuators
-        self.lo_freq[0] = chan.lo_freq
-        self.fh['global_data/lo_freq'][...] = chan.lo_freq
 
-        # ONR specific params below this line
-        # that appends these datafields based on file name
-
-        # In kidpy, the user shall call a function along the lines of
-        # "Append or include External Data".
-        PARAMS_PATH = '/home/onrkids/readout/host/params/'
-        detdx = PARAMS_PATH + f"detector_delta_x_tile{chan.tile_number}.npy"
-        detdy = PARAMS_PATH + f"detector_delta_y_tile{chan.tile_number}.npy"
-        det_ba = PARAMS_PATH + f"detector_beam_ampl_tile{chan.tile_number}.npy"
-        det_pol = PARAMS_PATH + f"detector_pol_tile{chan.tile_number}.npy"
-        dfoverf_per_mK = PARAMS_PATH + f"dfoverf_per_mK_tile{chan.tile_number}.npy"
-
-        chanmask = chan.chanmask
-        self.chanmask[:] = chanmask
-        self.fh['global_data/chanmask'][...] = chanmask
-        self.detector_delta_x[:] = np.load(detdx)
-        self.fh['global_data/detector_delta_x'][...] = np.load(detdx)
-        self.detector_delta_y[:] = np.load(detdy)
-        self.fh['global_data/detector_delta_y'][...] = np.load(detdy)
         self.detector_dx_dy_elevation_angle[:] = 89.0
-        self.fh['global_data/detector_dx_dy_elevation_angle'][...] = 89.0
-        self.detector_beam_ampl[:] = np.load(det_ba)
-        self.fh['global_data/detector_beam_ampl'][...] = np.load(det_ba)
-        self.detector_pol[:] = np.load(det_pol)
-        self.fh['global_data/detector_pol'][...] = np.load(det_pol)
-        self.dfoverf_per_mK[:] = np.load(dfoverf_per_mK)
-        self.fh['global_data/dfoverf_per_mK'][...] = np.load(dfoverf_per_mK)
 
         self.fh.flush()
 
@@ -408,23 +409,27 @@ class RawDataFile:
         """
         Call this function to provide the RawDataFile with
         """
-        log = logger.getChild(__name__)
-        log.debug(f"Checking for file {sweeppath}")
+        logger.debug(f"Checking for file {sweeppath}")
 
         if sweeppath:
             sweeppath = Path(sweeppath)
             if sweeppath.exists():
-                log.debug("found sweep file, appending.")
+                logger.debug("found sweep file, appending.")
                 if sweeppath.suffix == '.npy':
                     sweep_data = np.load(sweeppath)
+                    ds = self.fh.create_dataset("/global_data/lo_sweep", data=sweep_data)
+                    self.global_data_grp.attrs['has_lo_sweep'] = True
                 else:
                     with h5py.File(sweeppath, 'r') as sweep_file:
                         sweep_data = sweep_file['global_data/lo_sweep'][:]
-                self.fh.create_dataset("/global_data/lo_sweep", data=sweep_data)
+                        ds = self.fh.create_dataset("/global_data/lo_sweep", data=sweep_data)
+                        self.global_data_grp.attrs['has_lo_sweep'] = True
+
             else:
-                log.info("Specified sweep file does not exist. Will not append.")
+                logger.info("Specified sweep file does not exist. Will create an empty dataset")
+                self.global_data_grp.attrs['has_lo_sweep'] = False
         else:
-            log.info("No sweep file specified. Will not append.")
+            logger.info("No sweep file specified. Will not append.")
 
     def close(self):
         """
@@ -463,6 +468,8 @@ def gen_read(h5: str):
         elif isinstance(v, h5py.Group):
             v.visititems(read_and_write_property)
     rf.close()
+
+
 
 
 def get_yymmdd():
@@ -558,30 +565,27 @@ def get_last_rdf(name: str):
 
 @dataclass
 class Rfchan:
-    name: str = "undefined channame"
+    tile_name: str = "undefined channame"
     raw_filename: str = "./data.hdf5"
     baseband_freqs = []
-    tone_powers= []
+    tone_powers = []
     attenuator_settings = (0.0, 0.0)
-    n_tones:int = 0
-    n_sample:int = 488
-    n_attenuators:int = 2
-    sample_rate:float = 488.0
+    n_tones: int = 0
+    n_sample: int = 488
+    n_attenuators: int = 2
+    sample_rate: float = 488.0
     tile_number: int = 0
-    chan_number:int = 0 
-    ifslice_number:int = 0
+    chan_number: int = 0
+    ifslice_number: int = 0
     lo_sweep_filename: str = ""
     n_fftbins: int = 1024
     lo_freq: float = 0.0
     port: int = 0
-    ip : str= ""
+    ip: str = ""
     chanmask: npt.NDArray = field(default_factory=lambda: np.array([]))
 
     def upload_to_redis(self):
-        raise NotImplementedError("Planned feature; not implemented")
-    
+        raise Exception("Planned feature; not implemented")
+
     def save(self):
-        raise NotImplementedError("Planned feature; not implemented")
-
-
-
+        raise Exception("Planned feature; not implemented")

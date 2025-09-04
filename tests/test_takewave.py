@@ -1,7 +1,8 @@
-import kidpy3 as kidpy3
+import kidpy3
 import numpy as np
 import logging
 import time
+
 
 log = logging.getLogger("test_makewave.py." + __name__)
 log.setLevel(logging.DEBUG)  # Set the logging level
@@ -32,11 +33,18 @@ def main_func():
     x = dev.get_tone_list(1)
     y = dev.get_tone_list(2)
     log.info(f" CHAN 1 = {x}  CHAN 2 = {y}")
+
+    kidpy3.udp2.capture_packets(dev.rf1, 1)
     log.info("Now begin data taking")
 
-    dev.rf1.raw_filename = "/home/cody/workspace/pykid/datA.hdf5"
-    dev.rf2.raw_filename = "/home/cody/workspace/pykid/datB.hdf5"
-    kidpy3.capture([dev.rf1], time.sleep, 40)
+    dev.rf1.chanmask = np.zeros(1)
+    dev.rf2.chanmask = np.zeros(1)
 
+    dev.rf1.raw_filename = "/home/carobers/workspace/readout/data/datA.hdf5"
+    dev.rf2.raw_filename = "/home/carobers/workspace/readout/data/datB.hdf5"
+    kidpy3.capture([dev.rf1], time.sleep, 5)
+    log.info("main_func finished")
 
-main_func()
+if __name__ == "__main__":
+
+    main_func()

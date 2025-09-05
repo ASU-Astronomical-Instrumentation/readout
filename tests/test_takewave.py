@@ -29,7 +29,7 @@ def main_func():
     log.info("Set tone list 1")
     dev.set_tone_list(1, np.array([50e6]), np.ones(1))
     log.info("Set tone list 2")
-    dev.set_tone_list(2, [75e6], np.ones(1))
+    # dev.set_tone_list(2, [75e6], np.ones(1))
     x = dev.get_tone_list(1)
     y = dev.get_tone_list(2)
     log.info(f" CHAN 1 = {x}  CHAN 2 = {y}")

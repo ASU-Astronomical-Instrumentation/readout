@@ -218,7 +218,7 @@ int c_collect_data(const char *filename, const char *ip_addr, const int port) {
     }
     close(sock_fd);
     close_hdf5_handles(&df);
-    
+    H5Fflush(df.file, H5F_SCOPE_LOCAL);
     
     return 0;
 }

@@ -125,7 +125,3 @@ def hi():
     say_hello()
 
 
-class OrGate:
-    def __init__(self, food):
-        self.burrito = food
-

@@ -50,7 +50,7 @@ def capture(channels: List[Rfchan], fn=None, *args, **kwargs):
         rdf = RawDataFile(chan.raw_filename, 'w')
         rdf.format(chan.n_sample, chan.n_tones, chan.n_fftbins)
         rdf.set_global_data(chan)
-        rdf.append_lo_sweep(get_last_lo(chan.raw_filename))
+        rdf.append_lo_sweep(get_last_lo(chan.tile_name))
         rdf.close()
 
 

@@ -18,13 +18,18 @@ via the `h5py python library <https://www.h5py.org/>`_
 
 Changes 3.0.1
 --------------
-- Included Nia's modifications for ONR. Note that this will be deprecated and removed in the future
+- Included Nia's modifications for ONR. Note that this will may become deprecated and removed in the future
     since RawDataFile should be inherited downstream of the library by the end user for their purposes.
 - Modified 'time_ordered_data' dataset chunk size to match sizes with the data_collector c-lib.
 - Added dataset 'pkt_idx' to 'time_ordered_data' group.
 - Included Nia's changes to
     - RawDataFile.set_global_data()
-- Added 'has_lo_sweep' attribute to group 'global_data'
+- Added 'has_lo_sweep' attribute to group '/',
+    ```
+    fh = h5py.File("myFile.h5", "r")
+    has_LOS = fh.attrs['has_lo_sweep']
+    fh.close()
+    ```
 
 """
 from __future__ import annotations
@@ -417,17 +422,17 @@ class RawDataFile:
                 logger.debug("found sweep file, appending.")
                 if sweeppath.suffix == '.npy':
                     sweep_data = np.load(sweeppath)
-                    ds = self.fh.create_dataset("/global_data/lo_sweep", data=sweep_data)
-                    self.global_data_grp.attrs['has_lo_sweep'] = True
+                    self.fh.create_dataset("/global_data/lo_sweep", data=sweep_data)
+                    self.fh.attrs.create("has_lo_sweep", True)
                 else:
                     with h5py.File(sweeppath, 'r') as sweep_file:
                         sweep_data = sweep_file['global_data/lo_sweep'][:]
-                        ds = self.fh.create_dataset("/global_data/lo_sweep", data=sweep_data)
-                        self.global_data_grp.attrs['has_lo_sweep'] = True
+                        self.fh.create_dataset("/global_data/lo_sweep", data=sweep_data)
+                        self.fh.attrs.create("has_lo_sweep", True)
 
             else:
                 logger.info("Specified sweep file does not exist. Will create an empty dataset")
-                self.global_data_grp.attrs['has_lo_sweep'] = False
+                self.fh.attrs.create("has_lo_sweep", False)
         else:
             logger.info("No sweep file specified. Will not append.")
 

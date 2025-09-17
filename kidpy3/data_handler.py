@@ -101,7 +101,7 @@ class RawDataFile:
         self.n_sample = self.fh.create_dataset(
             "dimension/n_sample",
             (1,),
-            dtype=h5py.h5t.NATIVE_UINT64,
+            dtype=h5py.h5t.NATIVE_UINT32,
         )
         self.n_tones = self.fh.create_dataset(
             "dimension/n_tones",

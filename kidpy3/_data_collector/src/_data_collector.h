@@ -49,10 +49,13 @@ typedef struct raw_data_t {
     struct dset_2D q;
     struct dset_1D ts;
     struct dset_1D pkt_idx;
+    hid_t grp_dimension;
+    struct dset_1D n_sample;
     hid_t i_mem_space;
     hid_t q_mem_space;
     hid_t ts_mem_space;
     hid_t pkt_idx_mem_space;
+    hid_t n_sample_mem_space;
 } raw_data_t;
 
 void c_say_hi(void);

@@ -22,27 +22,13 @@ log.addHandler(console_handler)
 def main_func():
     log.info("Create obj")
     dev = kidpy3.RFSOC("devrfsoc.yml")
-    log.info("upload bitstream")
-    dev.upload_bitstream()
-    log.info("config hardware")
-    dev.config_hardware()
-    log.info("Set tone list 1")
-    dev.set_tone_list(1, np.array([50e6]), np.ones(1))
-    log.info("Set tone list 2")
-    # dev.set_tone_list(2, [75e6], np.ones(1))
-    x = dev.get_tone_list(1)
-    y = dev.get_tone_list(2)
-    log.info(f" CHAN 1 = {x}  CHAN 2 = {y}")
-
-    kidpy3.udp2.capture_packets(dev.rf1, 1)
-    log.info("Now begin data taking")
 
     dev.rf1.chanmask = np.zeros(1)
     dev.rf2.chanmask = np.zeros(1)
 
-    dev.rf1.raw_filename = "/home/carobers/workspace/readout/data/datA.hdf5"
-    dev.rf2.raw_filename = "/home/carobers/workspace/readout/data/datB.hdf5"
-    kidpy3.capture([dev.rf1], time.sleep, 5)
+    dev.rf1.raw_filename = "/home/carobers/workspace/readout/data/2power15_newtones_collection2.hdf5"
+    # dev.rf2.raw_filename = "/home/carobers/workspace/readout/data/datB.hdf5"
+    kidpy3.capture([dev.rf1], time.sleep, 30)
     log.info("main_func finished")
 
 if __name__ == "__main__":

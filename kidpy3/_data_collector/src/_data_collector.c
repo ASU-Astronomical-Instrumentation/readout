@@ -20,7 +20,7 @@ void close_hdf5_handles(const raw_data_t *df) {
     H5Sclose(df->q_mem_space);
     H5Sclose(df->ts_mem_space);
     H5Sclose(df->pkt_idx_mem_space);
-
+    H5Sclose(df->n_sample_mem_space);
     H5Tclose(df->i.datatype);
     H5Dclose(df->i.dataset);
 
@@ -32,6 +32,13 @@ void close_hdf5_handles(const raw_data_t *df) {
 
     H5Tclose(df->pkt_idx.datatype);
     H5Dclose(df->pkt_idx.dataset);
+
+    H5Tclose(df->n_sample.datatype);
+    H5Dclose(df->n_sample.dataset);
+
+    H5Gclose(df->grp_tod);
+    H5Gclose(df->grp_dimension);
+
 
     H5Fclose(df->file);
 }
@@ -66,6 +73,12 @@ int c_collect_data(const char *filename, const char *ip_addr, const int port) {
     // Open hdf5 file and gather its parameters/stats
     df.file = H5Fopen(filename, H5F_ACC_RDWR, H5P_DEFAULT);
     df.grp_tod = H5Gopen2(df.file, "time_ordered_data", H5P_DEFAULT);
+    df.grp_dimension = H5Gopen2(df.file, "dimension", H5P_DEFAULT);
+
+    df.n_sample.dataset = H5Dopen(df.grp_dimension, "n_sample", H5P_DEFAULT);
+    df.n_sample.datatype = H5Dget_type(df.n_sample.dataset);
+    df.n_sample.dataspace = H5Dget_space(df.n_sample.dataset);
+    df.n_sample.rank = H5Sget_simple_extent_dims(df.n_sample.dataspace, df.n_sample.dim, df.n_sample.max_dim);
 
     df.i.dataset = H5Dopen(df.grp_tod, "adc_i", H5P_DEFAULT);
     df.i.datatype = H5Dget_type(df.i.dataset);
@@ -89,6 +102,8 @@ int c_collect_data(const char *filename, const char *ip_addr, const int port) {
     df.pkt_idx.rank = H5Sget_simple_extent_dims(
         df.pkt_idx.dataspace, df.pkt_idx.dim, df.pkt_idx.max_dim);
 
+
+
     struct timeval tv;
     tv.tv_sec = 1;
     tv.tv_usec = 0;
@@ -110,11 +125,13 @@ int c_collect_data(const char *filename, const char *ip_addr, const int port) {
     df.q_mem_space = H5Screate_simple(2, iq_memspace_dim, NULL);
     df.ts_mem_space = H5Screate_simple(1, misc_memspace_dim, NULL);
     df.pkt_idx_mem_space = H5Screate_simple(1, misc_memspace_dim, NULL);
+    df.n_sample_mem_space = H5Screate_simple(1, misc_memspace_dim, NULL);
 
     int adc_i[ARRAY_SIZE];
     int adc_q[ARRAY_SIZE];
 
     uint32_t counter[1] = {0};
+    uint32_t n_samp[1] = {1};
     double time[1] = {0.0};
     hsize_t current_samp = 0;
 
@@ -148,13 +165,14 @@ int c_collect_data(const char *filename, const char *ip_addr, const int port) {
             return -1;
         }
 
-        for (size_t i = 0; i < BUFFER_SIZE/4; i++) {
-            data.data_uint[i] = htonl(data.data_uint[i]);
-        }
+        // for (size_t i = 0; i < BUFFER_SIZE/4; i++) {
+        //     data.data_uint[i] = htonl(data.data_uint[i]);
+        // }
         for (size_t i = 0; i < 1024; i++) {
             adc_i[i] = data.data_int[2*i];
             adc_q[i] = data.data_int[2*i+1];
         }
+        data.data_uint[2049] = htonl(data.data_uint[2049]);
         counter[0] = data.data_uint[2049];
 
 
@@ -212,9 +230,10 @@ int c_collect_data(const char *filename, const char *ip_addr, const int port) {
         H5Dwrite(df.q.dataset, df.q.datatype, df.q_mem_space, df.q.dataspace, H5P_DEFAULT, adc_q );
         H5Dwrite(df.ts.dataset, df.ts.datatype, df.ts_mem_space, df.ts.dataspace, H5P_DEFAULT, time );
         H5Dwrite(df.pkt_idx.dataset, df.pkt_idx.datatype, df.pkt_idx_mem_space, df.pkt_idx.dataspace, H5P_DEFAULT, counter );
-
+        H5Dwrite(df.n_sample.dataset, df.n_sample.datatype, df.n_sample_mem_space, df.n_sample.dataspace, H5P_DEFAULT, n_samp);
 
         current_samp += 1;
+        n_samp[0] += 1;
     }
     close(sock_fd);
     close_hdf5_handles(&df);

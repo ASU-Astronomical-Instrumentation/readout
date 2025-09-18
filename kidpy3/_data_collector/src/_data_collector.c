@@ -131,7 +131,7 @@ int c_collect_data(const char *filename, const char *ip_addr, const int port) {
     int adc_q[ARRAY_SIZE];
 
     uint32_t counter[1] = {0};
-    uint32_t n_samp[1] = {1};
+    uint32_t n_samp[1] = {0};
     double time[1] = {0.0};
     hsize_t current_samp = 0;
 

@@ -172,8 +172,8 @@ int c_collect_data(const char *filename, const char *ip_addr, const int port) {
             adc_i[i] = data.data_int[2*i];
             adc_q[i] = data.data_int[2*i+1];
         }
-        data.data_uint[2049] = htonl(data.data_uint[2049]);
-        counter[0] = data.data_uint[2049];
+        data.data_uint[2051] = htonl(data.data_uint[2051]);
+        counter[0] = data.data_uint[2051];
 
 
         // Extend the dataset

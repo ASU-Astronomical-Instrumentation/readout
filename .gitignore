@@ -4,7 +4,10 @@ docs/_*
 *.log
 __pycache__/
 virtenv
-.idea
 conf.py
 testconf.yml
 kidpy3/TODO
+poetry.lock
+*.h5
+
+HDF5-1.14.6-Linux.tar.gz

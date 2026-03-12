@@ -414,9 +414,9 @@ class RawDataFile:
         else:
             self.timestamp = None
         if "/time_ordered_data/pkt_idx" in self.fh:
-            self.timestamp = self.fh["/time_ordered_data/pkt_idx"]
+            self.pkt_idx = self.fh["/time_ordered_data/pkt_idx"]
         else:
-            self.timestamp = None
+            self.pkt_idx = None
         if "/time_ordered_data/pps" in self.fh:
             self.pps = self.fh["/time_ordered_data/pps"]
         else:

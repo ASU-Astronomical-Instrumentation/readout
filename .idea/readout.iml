@@ -5,8 +5,10 @@
       <sourceFolder url="file://$MODULE_DIR$/kidpy3" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/HDF5-1.14.6-Linux" />
       <excludeFolder url="file://$MODULE_DIR$/build" />
+      <excludeFolder url="file://$MODULE_DIR$/.venv" />
+      <excludeFolder url="file://$MODULE_DIR$/kidpy3/_data_collector/.venv" />
     </content>
-    <orderEntry type="jdk" jdkName="Poetry (readout)" jdkType="Python SDK" />
+    <orderEntry type="jdk" jdkName="Python 3.12 (readout)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
 </module>

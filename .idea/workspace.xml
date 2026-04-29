@@ -17,94 +17,9 @@
     </configurations>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="bffb07dd-57d3-41b4-a0f7-5d2f0a4d3209" name="Changes" comment="">
+    <list default="true" id="bffb07dd-57d3-41b4-a0f7-5d2f0a4d3209" name="Changes" comment="Completes cython build">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/kidpy3/_data_collector/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/kidpy3/_data_collector/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/kidpy3/_data_collector/meson.build" beforeDir="false" afterPath="$PROJECT_DIR$/kidpy3/_data_collector/meson.build" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/kidpy3/_data_collector/src/_data_collector.c" beforeDir="false" afterPath="$PROJECT_DIR$/kidpy3/_data_collector/src/_data_collector.c" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/kidpy3/_data_collector/src/_data_collector.h" beforeDir="false" afterPath="$PROJECT_DIR$/kidpy3/_data_collector/src/_data_collector.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/kidpy3/lib/include/H5ACpublic.h" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/kidpy3/lib/include/H5Apublic.h" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/kidpy3/lib/include/H5Cpublic.h" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/kidpy3/lib/include/H5DOpublic.h" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/kidpy3/lib/include/H5DSpublic.h" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/kidpy3/lib/include/H5Dpublic.h" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/kidpy3/lib/include/H5ESdevelop.h" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/kidpy3/lib/include/H5ESpublic.h" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/kidpy3/lib/include/H5Epubgen.h" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/kidpy3/lib/include/H5Epublic.h" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/kidpy3/lib/include/H5FDcore.h" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/kidpy3/lib/include/H5FDdevelop.h" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/kidpy3/lib/include/H5FDdirect.h" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/kidpy3/lib/include/H5FDfamily.h" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/kidpy3/lib/include/H5FDhdfs.h" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/kidpy3/lib/include/H5FDioc.h" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/kidpy3/lib/include/H5FDlog.h" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/kidpy3/lib/include/H5FDmirror.h" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/kidpy3/lib/include/H5FDmpi.h" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/kidpy3/lib/include/H5FDmpio.h" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/kidpy3/lib/include/H5FDmulti.h" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/kidpy3/lib/include/H5FDonion.h" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/kidpy3/lib/include/H5FDpublic.h" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/kidpy3/lib/include/H5FDros3.h" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/kidpy3/lib/include/H5FDsec2.h" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/kidpy3/lib/include/H5FDsplitter.h" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/kidpy3/lib/include/H5FDstdio.h" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/kidpy3/lib/include/H5FDsubfiling.h" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/kidpy3/lib/include/H5FDwindows.h" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/kidpy3/lib/include/H5Fpublic.h" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/kidpy3/lib/include/H5Gpublic.h" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/kidpy3/lib/include/H5IMpublic.h" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/kidpy3/lib/include/H5Idevelop.h" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/kidpy3/lib/include/H5Ipublic.h" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/kidpy3/lib/include/H5LDpublic.h" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/kidpy3/lib/include/H5LTpublic.h" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/kidpy3/lib/include/H5Ldevelop.h" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/kidpy3/lib/include/H5Lpublic.h" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/kidpy3/lib/include/H5MMpublic.h" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/kidpy3/lib/include/H5Mpublic.h" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/kidpy3/lib/include/H5Opublic.h" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/kidpy3/lib/include/H5PLextern.h" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/kidpy3/lib/include/H5PLpublic.h" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/kidpy3/lib/include/H5PTpublic.h" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/kidpy3/lib/include/H5Ppublic.h" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/kidpy3/lib/include/H5Rpublic.h" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/kidpy3/lib/include/H5Spublic.h" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/kidpy3/lib/include/H5TBpublic.h" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/kidpy3/lib/include/H5TSdevelop.h" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/kidpy3/lib/include/H5Tdevelop.h" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/kidpy3/lib/include/H5Tpublic.h" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/kidpy3/lib/include/H5VLconnector.h" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/kidpy3/lib/include/H5VLconnector_passthru.h" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/kidpy3/lib/include/H5VLnative.h" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/kidpy3/lib/include/H5VLpassthru.h" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/kidpy3/lib/include/H5VLpublic.h" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/kidpy3/lib/include/H5Zdevelop.h" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/kidpy3/lib/include/H5Zpublic.h" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/kidpy3/lib/include/H5api_adpt.h" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/kidpy3/lib/include/H5overflow.h" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/kidpy3/lib/include/H5pubconf.h" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/kidpy3/lib/include/H5public.h" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/kidpy3/lib/include/H5version.h" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/kidpy3/lib/include/hdf5.h" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/kidpy3/lib/include/hdf5_hl.h" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/kidpy3/lib/libhdf5.so" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/kidpy3/lib/libhdf5.so.310" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/kidpy3/lib/libhdf5.so.310.5.1" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/kidpy3/lib/libhdf5_cpp.so" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/kidpy3/lib/libhdf5_cpp.so.310" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/kidpy3/lib/libhdf5_cpp.so.310.0.6" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/kidpy3/lib/libhdf5_hl.so" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/kidpy3/lib/libhdf5_hl.so.310" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/kidpy3/lib/libhdf5_hl.so.310.0.6" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/kidpy3/lib/libhdf5_hl_cpp.so" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/kidpy3/lib/libhdf5_hl_cpp.so.310" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/kidpy3/lib/libhdf5_hl_cpp.so.310.0.6" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/kidpy3/lib/libhdf5_tools.so" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/kidpy3/lib/libhdf5_tools.so.310" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/kidpy3/lib/libhdf5_tools.so.310.0.6" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/pyproject.toml" beforeDir="false" afterPath="$PROJECT_DIR$/pyproject.toml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/scripts/build.py" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/build.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -336,12 +251,25 @@
       <workItem from="1776545328199" duration="708000" />
       <workItem from="1776898644087" duration="1389000" />
       <workItem from="1777415551319" duration="8402000" />
-      <workItem from="1777489575844" duration="10535000" />
+      <workItem from="1777489575844" duration="11105000" />
     </task>
+    <task id="LOCAL-00001" summary="Completes cython build">
+      <option name="closed" value="true" />
+      <created>1777503032968</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1777503032968</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="Completes cython build" />
+    <option name="LAST_COMMIT_MESSAGE" value="Completes cython build" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

@@ -4,21 +4,12 @@ project('_data_collector', 'c',
 
 cc = meson.get_compiler('c')
 # Check the operating system
-os_name = host_machine.system()
 
-if os_name == 'linux'
-    # Linux: Assume standard system installation (finds it via pkg-config or cmake)
-    # Make sure you have the 'libhdf5-dev' (Debian/Ubuntu) or 'hdf5-devel' (Fedora/RHEL) package installed!
-    hdf5_inc = include_directories('/HDF_Group/HDF5/2.1.1/include')
-    hdf5_lib = cc.find_library('hdf5', dirs:'/HDF_Group/HDF5/2.1.1/lib')
-    hdf5_dep = dependency('hdf5', language: 'c', static: false)
-elif os_name == 'windows'
-    # Explicitly block Windows builds as requested
-    error('Windows is explicitly not supported for this project.')
-
-else
-    error('Unsupported operating system: ' + os_name)
-endif
+# Linux: Assume standard system installation (finds it via pkg-config or cmake)
+# Make sure you have the 'libhdf5-dev' (Debian/Ubuntu) or 'hdf5-devel' (Fedora/RHEL) package installed!
+hdf5_inc = include_directories('/HDF_Group/HDF5/2.1.1/include')
+hdf5_lib = cc.find_library('hdf5', dirs:'/HDF_Group/HDF5/2.1.1/lib')
+hdf5_dep = dependency('hdf5', language: 'c', static: false)
 
 incdir = include_directories('src')
 #myargs = ['-pg', '-O0', '-g', '-finstrument-functions']
@@ -31,8 +22,7 @@ myargs = ['-O3']
 #)
 
 myprog = executable('test_runner',['src/test_runner.c',  'src/_data_collector.c'],
-            include_directories:[hdf5_inc, incdir],
+            include_directories: [incdir],
             c_args: myargs, link_args: myargs,
-            dependencies: [hdf5_dep],
-
+            dependencies: [hdf5_dep]
 )

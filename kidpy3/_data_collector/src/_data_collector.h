@@ -23,6 +23,7 @@ typedef struct iqdata_t {
 
 typedef struct raw_data_t {
     hid_t file;
+    hid_t adciq_dataset_prop;
 
     hid_t grp_tod;
     struct dset_2D {

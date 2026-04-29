@@ -1,15 +1,16 @@
 #include <netinet/in.h>
 #include <stdint.h>
-#include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
 #include <time.h>
 #include "_data_collector.h"
 #include <signal.h>
+#include <errno.h>
 
 static volatile sig_atomic_t stop = 0;
 
 void handle_sig(int sig) {
+    (void)sig;
     stop = 1;
 }
 void c_say_hi(void) {
@@ -48,10 +49,17 @@ void close_hdf5_handles(const raw_data_t *df) {
     H5Fclose(df->file);
 }
 
+double get_milli_time(void) {
+    struct timespec ts;
+    clock_gettime(CLOCK_REALTIME, &ts);
+    // Convert seconds to ms and nanoseconds to ms
+    return (double)ts.tv_sec * 1000.0 + (double)ts.tv_nsec / 1000000.0;
+}
+
 int c_collect_data(const char *filename, const char *ip_addr, const int port) {
     // This function is intended to be a child of a python interpreter. The parent needs to kill us gracefully.
     // NOTE: This might actually be bad if the caller also changes how signals behave.
-
+    int buffer_size = 1048576; // 1 MB
     struct sigaction sa;
     sa.sa_handler = handle_sig;
     sigemptyset(&sa.sa_mask);
@@ -120,13 +128,18 @@ int c_collect_data(const char *filename, const char *ip_addr, const int port) {
 
 
     struct timeval tv;
-    tv.tv_sec = 1;
+    tv.tv_sec = 10;
     tv.tv_usec = 0;
+    //configure timeout for socket
     if (setsockopt(sock_fd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv)) < 0) {
         close(sock_fd);
         close_hdf5_handles(&df);
         return -4;
 
+    }
+    //configure buffersize for socket
+    if (setsockopt(sock_fd, SOL_SOCKET, SO_RCVBUF, &buffer_size, sizeof(buffer_size)) < 0) {
+        perror("setsockopt SO_RCVBUF failed");
     }
     if (bind(sock_fd, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0) {
         close(sock_fd);
@@ -152,8 +165,13 @@ int c_collect_data(const char *filename, const char *ip_addr, const int port) {
     double time[1] = {0.0};
     hsize_t current_samp = 0;
 
+    double perfcounts[4880] = {0}; //
+#define NCOUNTS 8
+#define EARLYTERMINATION 500
     while(!stop){
-
+        //FORCE THE TERMINATION AFTER 9 PERFCOUNTS * N SAMPLES + N
+        if (current_samp >= EARLYTERMINATION)
+                break;
         iqdata_t data;
         const hsize_t curr_pos[] = {0, current_samp};
         const hsize_t curr_pos1d[] = {current_samp};
@@ -161,7 +179,9 @@ int c_collect_data(const char *filename, const char *ip_addr, const int port) {
         // Use clock_gettime if available
         struct timespec ts;
 
+        perfcounts[NCOUNTS*current_samp + 0] = get_milli_time();
         const ssize_t bytes_received = recv(sock_fd, data.data, BUFFER_SIZE, MSG_WAITALL);
+        perfcounts[NCOUNTS*current_samp + 1] = get_milli_time();
         clock_gettime(CLOCK_REALTIME, &ts);
         time[0] = (double)ts.tv_sec + (double)ts.tv_nsec / 1.0e9;
         if (bytes_received < 0) {
@@ -170,10 +190,11 @@ int c_collect_data(const char *filename, const char *ip_addr, const int port) {
             close_hdf5_handles(&df);
             if (stop == 1) {
                 /*We're much more likely to interrupt the socket while it waits than the rest of the
-                program, which makes it falsely return an error since we interrupt a syscall*/
+                program, which makes it falsely return an error since we interrupt a syscall..which is
+                undesirable.... need to replace this method with an IPC type of exchange*/
                 return 0;
             }else {
-                return -2;
+                return -2; //FIXME: set to 0 for testing
             }
         }
         if (bytes_received != BUFFER_SIZE) {
@@ -185,6 +206,7 @@ int c_collect_data(const char *filename, const char *ip_addr, const int port) {
         // for (size_t i = 0; i < BUFFER_SIZE/4; i++) {
         //     data.data_uint[i] = htonl(data.data_uint[i]);
         // }
+        perfcounts[NCOUNTS*current_samp + 2] = get_milli_time();
         for (size_t i = 0; i < 1024; i++) {
             adc_i[i] = data.data_int[2*i];
             adc_q[i] = data.data_int[2*i+1];
@@ -192,9 +214,12 @@ int c_collect_data(const char *filename, const char *ip_addr, const int port) {
         data.data_uint[2051] = htonl(data.data_uint[2051]);
         pps[0] = data.data[8203];
         counter[0] = data.data_uint[2051];
+        perfcounts[NCOUNTS*current_samp + 3] = get_milli_time();
 
         //First, if we are a 488*nth iteration, we need to extend the dataset
         if (current_samp % 488 == 0) {
+
+            perfcounts[NCOUNTS*current_samp + 4] = get_milli_time();
             // Extend the dataset
             df.i.dim[1] += 488;
             df.q.dim[1] += 488;
@@ -244,30 +269,70 @@ int c_collect_data(const char *filename, const char *ip_addr, const int port) {
             df.ts.dataspace = H5Dget_space(df.ts.dataset);
             df.pkt_idx.dataspace = H5Dget_space(df.pkt_idx.dataset);
             df.pps.dataspace = H5Dget_space(df.pps.dataset);
+            perfcounts[NCOUNTS*current_samp + 5] = get_milli_time();
 
         }
-
-        //Select the new hyperslab for the incomming data
-        H5Sselect_hyperslab(df.i.dataspace, H5S_SELECT_SET, curr_pos, NULL, iq_memspace_dim, NULL);
-        H5Sselect_hyperslab(df.q.dataspace, H5S_SELECT_SET, curr_pos, NULL, iq_memspace_dim, NULL);
-        H5Sselect_hyperslab(df.ts.dataspace, H5S_SELECT_SET, curr_pos1d, NULL, misc_memspace_dim, NULL);
-        H5Sselect_hyperslab(df.pkt_idx.dataspace, H5S_SELECT_SET, curr_pos1d, NULL, misc_memspace_dim, NULL);
-        H5Sselect_hyperslab(df.pps.dataspace, H5S_SELECT_SET, curr_pos1d, NULL, misc_memspace_dim, NULL);
-
+        perfcounts[NCOUNTS*current_samp + 6] = get_milli_time();
+        //Select the new hyperslab for the incomming dat/**/a
+        H5Sselect_hyperslab(df.i.dataspace, H5S_SELECT_SET, curr_pos, NULL,
+            iq_memspace_dim, NULL);
+        H5Sselect_hyperslab(df.q.dataspace, H5S_SELECT_SET, curr_pos, NULL,
+            iq_memspace_dim, NULL);
+        H5Sselect_hyperslab(df.ts.dataspace, H5S_SELECT_SET, curr_pos1d, NULL,
+            misc_memspace_dim, NULL);
+        H5Sselect_hyperslab(df.pkt_idx.dataspace, H5S_SELECT_SET, curr_pos1d, NULL,
+            misc_memspace_dim, NULL);
+        H5Sselect_hyperslab(df.pps.dataspace, H5S_SELECT_SET, curr_pos1d, NULL,
+            misc_memspace_dim, NULL);
+        perfcounts[NCOUNTS*current_samp + 7] = get_milli_time();
         // Write the data
-        H5Dwrite(df.i.dataset, df.i.datatype, df.i_mem_space, df.i.dataspace, H5P_DEFAULT, adc_i );
-        H5Dwrite(df.q.dataset, df.q.datatype, df.q_mem_space, df.q.dataspace, H5P_DEFAULT, adc_q );
-        H5Dwrite(df.ts.dataset, df.ts.datatype, df.ts_mem_space, df.ts.dataspace, H5P_DEFAULT, time );
-        H5Dwrite(df.pkt_idx.dataset, df.pkt_idx.datatype, df.pkt_idx_mem_space, df.pkt_idx.dataspace, H5P_DEFAULT, counter );
-        H5Dwrite(df.n_sample.dataset, df.n_sample.datatype, df.n_sample_mem_space, df.n_sample.dataspace, H5P_DEFAULT, n_samp);
-        H5Dwrite(df.pps.dataset, df.pps.datatype, df.pps_mem_space, df.pps.dataspace, H5P_DEFAULT, pps );
+        H5Dwrite(df.i.dataset, df.i.datatype, df.i_mem_space,
+            df.i.dataspace, H5P_DEFAULT, adc_i );
+        H5Dwrite(df.q.dataset, df.q.datatype, df.q_mem_space,
+            df.q.dataspace, H5P_DEFAULT, adc_q );
+        H5Dwrite(df.ts.dataset, df.ts.datatype, df.ts_mem_space,
+            df.ts.dataspace, H5P_DEFAULT, time );
+        H5Dwrite(df.pkt_idx.dataset, df.pkt_idx.datatype, df.pkt_idx_mem_space,
+            df.pkt_idx.dataspace, H5P_DEFAULT, counter );
+        H5Dwrite(df.n_sample.dataset, df.n_sample.datatype, df.n_sample_mem_space,
+            df.n_sample.dataspace, H5P_DEFAULT, n_samp);
+        H5Dwrite(df.pps.dataset, df.pps.datatype, df.pps_mem_space,
+            df.pps.dataspace, H5P_DEFAULT, pps );
+        perfcounts[NCOUNTS*current_samp + 8] = get_milli_time();
 
         current_samp += 1;
         n_samp[0] += 1;
     }
     close(sock_fd);
     close_hdf5_handles(&df);
-    H5Fflush(df.file, H5F_SCOPE_LOCAL);
-    
+
+    //print off the results
+    FILE *FH_perfcount;
+    FH_perfcount = fopen("perfcounts.csv", "w");
+    if (FH_perfcount == NULL) {
+        printf("Error: %s\n", strerror(errno));
+    }
+
+    // fprintf(FH_perfcount, "recv(...), l206, l213, setExtents, setExtents-end, "
+    // "selectHyperslab, selectHyperslab-end & H5DWrite-start, H5DWrite-end\n"
+    // );
+
+    fprintf(FH_perfcount, "Time costs for execution (ms)\n"
+        "socket.recv(...), "
+        "split interleaved values, "
+        "HDF5 SetExtent, "
+        "HDF5 Select Hyperslab, "
+        "HDF5 Write\n"
+        );
+    //For every iteration of the data collector loop or 'nth sample'
+    for (unsigned int j = 0; j < EARLYTERMINATION; j++) {
+        fprintf(FH_perfcount, "%f, ", perfcounts[NCOUNTS*j+1]-perfcounts[NCOUNTS*j+0]);
+        fprintf(FH_perfcount, "%f, ", perfcounts[NCOUNTS*j+3]-perfcounts[NCOUNTS*j+2]);
+        fprintf(FH_perfcount, "%f, ", perfcounts[NCOUNTS*j+5]-perfcounts[NCOUNTS*j+4]);
+        fprintf(FH_perfcount, "%f, ", perfcounts[NCOUNTS*j+7]-perfcounts[NCOUNTS*j+6]);
+        fprintf(FH_perfcount, "%f\n", perfcounts[NCOUNTS*j+8]-perfcounts[NCOUNTS*j+7]);
+
+    }
+
     return 0;
 }

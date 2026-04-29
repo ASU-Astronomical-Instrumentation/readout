@@ -8,9 +8,9 @@ def start_high_rate_injector(host="127.0.0.1", port=40096):
     array_a = np.arange(1024, dtype=np.int32)
     array_b = np.flip(np.arange(1024, dtype=np.int32))
 
-    interleaved = np.empty(2048, dtype=np.int32)
-    interleaved[0::2] = array_a
-    interleaved[1::2] = array_b
+    interleaved = np.zeros(2052, dtype=np.int32)
+    interleaved[0:2048:2] = array_a[0:1024]
+    interleaved[1:2048:2] = array_b[0:1024]
     packet_data = interleaved.tobytes()
 
     # 2. Setup Socket
@@ -49,50 +49,4 @@ def start_high_rate_injector(host="127.0.0.1", port=40096):
 
 if __name__ == "__main__":
     # Lets first create a datafile
-    with h5py.File("test_dataset.h5", 'w') as fd:
-        print("Creating dataset")
-        n_sample = 0
-        chunk_size = 488
-        n_fftbins = 1024
-        fd.create_group("global_data")
-        fd.create_dataset("dimension/n_sample",
-                          (1,),
-                          maxshape=(1,),
-                          dtype=h5py.h5t.STD_U64LE,
-        )
-        adc_i = fd.create_dataset(
-            "time_ordered_data/adc_i",
-            (n_fftbins, n_sample),
-            chunks=(n_fftbins, chunk_size),
-            maxshape=(n_fftbins, None),
-            dtype=h5py.h5t.STD_I32LE,
-        )
-        adc_q = fd.create_dataset(
-            "time_ordered_data/adc_q",
-            (n_fftbins, n_sample),
-            chunks=(n_fftbins, chunk_size),
-            maxshape=(n_fftbins, None),
-            dtype=h5py.h5t.STD_I32LE,
-        )
-
-        timestamp = fd.create_dataset(
-            "time_ordered_data/timestamp",
-            (n_sample,),
-            chunks=(chunk_size,),
-            maxshape=(None,),
-            dtype=h5py.h5t.IEEE_F64LE,
-        )
-        pkt_idx = fd.create_dataset(
-            "time_ordered_data/pkt_idx",
-            (n_sample,),
-            chunks=(chunk_size,),
-            maxshape=(None,),
-            dtype=h5py.h5t.STD_U32LE)
-        pps = fd.create_dataset(
-            "time_ordered_data/pps",
-            (0,),
-            chunks=(488,),
-            maxshape=(None,),
-            dtype=h5py.h5t.STD_U8LE,
-        )
-    # start_high_rate_injector()
+    start_high_rate_injector()

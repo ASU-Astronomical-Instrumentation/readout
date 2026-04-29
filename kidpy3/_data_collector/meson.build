@@ -3,8 +3,6 @@ project('_data_collector', 'c',
         default_options : ['warning_level=3', 'c_std=gnu11'])
 
 cc = meson.get_compiler('c')
-lib_args = ['-DBUILDING_MESON_LIBRARY', '-D__BUILD_FOR_LIB__']
-
 # Check the operating system
 os_name = host_machine.system()
 
@@ -23,12 +21,18 @@ else
 endif
 
 incdir = include_directories('src')
+#myargs = ['-pg', '-O0', '-g', '-finstrument-functions']
+myargs = ['-O3']
 # Build the shared library using the unified hdf5_dep variable
-mylib = shared_library('_data_collector', 'src/_data_collector.c',
-               install : false,
-               c_args : lib_args,
-               dependencies: [hdf5_dep],
-               include_directories: incdir
+#mylib = shared_library('_data_collector', 'src/_data_collector.c',
+#   install : false,
+#   dependencies: [hdf5_dep],
+#   include_directories: incdir
+#)
+
+myprog = executable('test_runner',['src/test_runner.c',  'src/_data_collector.c'],
+            include_directories:[hdf5_inc, incdir],
+            c_args: myargs, link_args: myargs,
+            dependencies: [hdf5_dep],
+
 )
-executable('test_runner','src/test_runner.c', link_with: mylib, include_directories:[hdf5_inc, incdir],
-c_args : ['-pg', '-O0'])

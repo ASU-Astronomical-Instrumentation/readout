@@ -19,7 +19,6 @@
   <component name="ChangeListManager">
     <list default="true" id="bffb07dd-57d3-41b4-a0f7-5d2f0a4d3209" name="Changes" comment="Completes cython build">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pyproject.toml" beforeDir="false" afterPath="$PROJECT_DIR$/pyproject.toml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -56,41 +55,43 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "Python.build.executor": "Run",
-    "Python.build_ext.executor": "Run",
-    "Python.h5py_dataset_usage.executor": "Run",
-    "Python.makedatafile.executor": "Run",
-    "Python.plot_deltas.executor": "Run",
-    "Python.run test_hdf5lib.executor": "Run",
-    "Python.test_data_emitter.executor": "Run",
-    "Python.test_hdf5.executor": "Run",
-    "Python.test_packet_generator.executor": "Run",
-    "RunOnceActivity.MCP Project settings loaded": "true",
-    "RunOnceActivity.RadMigrateCodeStyle": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
-    "RunOnceActivity.cidr.known.project.marker": "true",
-    "RunOnceActivity.readMode.enableVisualFormatting": "true",
-    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
-    "cf.first.check.clang-format": "false",
-    "cidr.known.project.marker": "true",
-    "codeWithMe.voiceChat.enabledByDefault": "false",
-    "com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1": "true",
-    "git-widget-placeholder": "c__datacap",
-    "junie.onboarding.icon.badge.shown": "true",
-    "last_opened_file_path": "/home/carobers/Workspace/readout/kidpy3/_data_collector/src/makedatafile.py",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "settings.editor.selected.configurable": "preferences.keymap",
-    "to.speed.mode.migration.done": "true",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Python.build.executor&quot;: &quot;Run&quot;,
+    &quot;Python.build_ext.executor&quot;: &quot;Run&quot;,
+    &quot;Python.h5py_dataset_usage.executor&quot;: &quot;Run&quot;,
+    &quot;Python.makedatafile.executor&quot;: &quot;Run&quot;,
+    &quot;Python.plot_deltas.executor&quot;: &quot;Run&quot;,
+    &quot;Python.run test_hdf5lib.executor&quot;: &quot;Run&quot;,
+    &quot;Python.test_data_emitter.executor&quot;: &quot;Run&quot;,
+    &quot;Python.test_hdf5.executor&quot;: &quot;Run&quot;,
+    &quot;Python.test_packet_generator.executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.MCP Project settings loaded&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.RadMigrateCodeStyle&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.cidr.known.project.marker&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.readMode.enableVisualFormatting&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
+    &quot;cf.first.check.clang-format&quot;: &quot;false&quot;,
+    &quot;cidr.known.project.marker&quot;: &quot;true&quot;,
+    &quot;codeWithMe.voiceChat.enabledByDefault&quot;: &quot;false&quot;,
+    &quot;com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1&quot;: &quot;true&quot;,
+    &quot;database.data.extractors.current.export.id&quot;: &quot;Comma-separated (CSV)_id&quot;,
+    &quot;database.data.extractors.current.id&quot;: &quot;Comma-separated (CSV)_id&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;c__datacap&quot;,
+    &quot;junie.onboarding.icon.badge.shown&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/home/carobers/Workspace/readout/kidpy3/_data_collector/src/makedatafile.py&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.keymap&quot;,
+    &quot;to.speed.mode.migration.done&quot;: &quot;true&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="RdControllerToolWindowsLayoutState" isNewUi="true">
     <layout>
       <window_info id="Bookmarks" side_tool="true" />
@@ -153,7 +154,9 @@
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="DEBUG_JUST_MY_CODE" value="true" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="RUN_TOOL" value="" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/scratchpad/h5py_dataset_usage.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
@@ -218,6 +221,7 @@
     <list>
       <item itemvalue="Python.test_data_emitter" />
       <item itemvalue="Python.makedatafile" />
+      <item itemvalue="Python.h5py_dataset_usage" />
     </list>
   </component>
   <component name="SharedIndexes">
@@ -252,6 +256,9 @@
       <workItem from="1776898644087" duration="1389000" />
       <workItem from="1777415551319" duration="8402000" />
       <workItem from="1777489575844" duration="11105000" />
+      <workItem from="1777518450971" duration="40000" />
+      <workItem from="1777518543907" duration="904000" />
+      <workItem from="1777603430742" duration="2197000" />
     </task>
     <task id="LOCAL-00001" summary="Completes cython build">
       <option name="closed" value="true" />

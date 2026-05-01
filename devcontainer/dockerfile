@@ -1,0 +1,50 @@
+FROM ubuntu:22.04 AS baseinstall
+ENV TZ=America/Phoenix
+RUN apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends tzdata && \
+    ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && \
+    echo $TZ > /etc/timezone && \
+    apt-get clean
+
+RUN apt-get install -y ninja-build graphviz
+RUN apt-get -y install --no-install-recommends \
+  build-essential clang cmake cmake-curses-gui default-jdk gfortran git graphviz \
+  less libtool-bin libyajl-dev mpi-default-dev ninja-build pkg-config valgrind wget \
+  libssl3 libssl-dev libcurl4 libcurl4-openssl-dev
+
+# python build dependencies
+RUN apt-get install -y build-essential gdb lcov pkg-config \
+      libbz2-dev libffi-dev libgdbm-dev libgdbm-compat-dev liblzma-dev \
+      libncurses5-dev libreadline6-dev libsqlite3-dev libssl-dev \
+      lzma lzma-dev tk-dev uuid-dev zlib1g-dev libmpdec-dev libzstd-dev \
+      inetutils-inetd
+
+FROM baseinstall AS extradeps
+WORKDIR /download
+RUN wget https://github.com/Kitware/CMake/releases/download/v4.3.1/cmake-4.3.1-linux-x86_64.sh && chmod +x cmake-4.3.1-linux-x86_64.sh \
+  && ./cmake-4.3.1-linux-x86_64.sh --skip-license --prefix=/usr/
+RUN wget https://www.doxygen.nl/files/doxygen-1.16.1.linux.bin.tar.gz && tar xzf doxygen-1.16.1.linux.bin.tar.gz \
+  && cd doxygen-1.16.1 && cp -ru * /usr/
+
+# Build Python
+RUN wget https://www.python.org/ftp/python/3.12.5/Python-3.12.5.tar.xz \
+  && tar xJf Python-3.12.5.tar.xz
+
+RUN cd Python-3.12.5 \
+  && mkdir build \
+  && cd build \
+  && ../configure --enable-optimizations \
+  && make -j \
+  && make install
+
+
+# Finally, setup hdf5
+FROM extradeps AS hdf5sources
+WORKDIR /tmp/workspace
+RUN wget https://github.com/HDFGroup/hdf5/releases/download/2.1.1/hdf5-2.1.1.tar.gz && tar -xzf hdf5-2.1.1.tar.gz && mkdir -p /tmp/workspace/build
+COPY ./build.sh /tmp/workspace/build
+
+FROM hdf5sources AS finalbuild
+WORKDIR /tmp/workspace/build
+RUN chmod +x /tmp/workspace/build/build.sh && /tmp/workspace/build/build.sh || true
+WORKDIR /shared/readout

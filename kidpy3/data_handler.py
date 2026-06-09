@@ -228,37 +228,7 @@ class RawDataFile:
         self.adc_q.resize((1024, n_sample))
         self.timestamp.resize((n_sample,))
 
-    def set_global_data(self, chan: Rfchan, params_dir: str=DEFAULT_PARAMS_DIRECTORY):
-
-        params_tile_file = Path(f'{params_dir}/params_tile_{chan.tile_name}.h5')
-
-        # Load values from params file if it exists
-        if params_tile_file.exists():
-            log = logger.getChild(__name__)
-            log.debug(f"Using params file: {params_tile_file}")
-            with h5py.File(params_tile_file, 'r') as params_fh:
-                chanmask = params_fh['chanmask'][:]
-                tone_powers = params_fh['tone_powers'][:]
-                baseband_freqs = params_fh['baseband_freqs'][:]
-                lo_freq = params_fh['lo_freq'][()]
-                detdx = params_fh['detector_delta_x'][:]
-                detdy = params_fh['detector_delta_y'][:]
-                det_ba = params_fh['detector_beam_ampl'][:]
-                det_pol = params_fh['detector_pol'][:]
-                dfoverf_per_mK = params_fh['dfoverf_per_mK'][:]
-
-            self.chanmask[:] = chanmask
-            self.baseband_freqs[:] = baseband_freqs
-            self.tone_powers[:] = tone_powers
-            self.lo_freq[0] = lo_freq
-            self.detector_delta_x[:] = detdx
-            self.detector_delta_y[:] = detdy
-            self.detector_beam_ampl[:] = det_ba
-            self.detector_pol[:] = det_pol
-            self.dfoverf_per_mK[:] = dfoverf_per_mK
-
-        # FIXME: THESE PARAMETERS ARE NOT GUARANTEED TO EXIST AND WILL CAUSE A CRASH IN NON-ONR SYSTEMS
-        # Use current channel attributes to set global data, taking precedence over params file
+    def set_global_data(self, chan: Rfchan):
         self.baseband_freqs[:] = chan.baseband_freqs
         self.tone_powers[:] = chan.tone_powers
         self.lo_freq[0] = chan.lo_freq
@@ -526,11 +496,11 @@ def get_last_lo(name: str):
     if np.size(check_date_folder) == 0:
         return ""
 
-    fstring = f"/data/{yymmdd}/{yymmdd}*{name}_LO_Sweep_*_high_res*"
+    fstring = f"/data/{yymmdd}/{yymmdd}*{name}_LO_Sweep_*"
     g = glob.glob(fstring)
 
     if len(g) == 0:
-        logger.warning(f"No \"high res\" LO sweep files found for {name} on {yymmdd}.")
+        logger.warning(f"No LO sweep files found for {name} on {yymmdd}.")
         return ""
 
     g.sort()

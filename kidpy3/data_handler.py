@@ -6,7 +6,7 @@
 
 :Date: 2025-08-22
 
-:Version: 3.0.1
+:Version: 3.1.0
 
 Brief overview
 --------------
@@ -30,6 +30,14 @@ Changes 3.0.1
     has_LOS = fh.attrs['has_lo_sweep']
     fh.close()
     ```
+
+Changes 3.1.0
+---------------
+- Removed Nia's modifications for ONR from 3.0.1. Global data that is not stored in the
+    `Rfchan` object must now be added manually by the end user's code.
+- `udp2.capture` no longer appends the LO sweep. Any code that expects an LO sweep to be
+    present should now explicitly call `append_lo_sweep` or add it manually.
+- Explicitly state dtype for `baseband_freqs` and `sample_rate` to resolve warning messages.
 
 """
 from __future__ import annotations
@@ -128,12 +136,12 @@ class RawDataFile:
             dtype=h5py.h5t.NATIVE_DOUBLE,
         )
         self.baseband_freqs = self.fh.create_dataset(
-            "global_data/baseband_freqs", (n_tones,)
+            "global_data/baseband_freqs", (n_tones,), h5py.h5.NATIVE_DOUBLE
         )
         self.detector_dx_dy_elevation_angle = self.fh.create_dataset(
             "global_data/detector_dx_dy_elevation_angle", (1,), h5py.h5t.NATIVE_DOUBLE
         )
-        self.sample_rate = self.fh.create_dataset("global_data/sample_rate", (1,))
+        self.sample_rate = self.fh.create_dataset("global_data/sample_rate", (1,), h5py.h5t.NATIVE_DOUBLE)
         self.tile_number = self.fh.create_dataset(
             "global_data/tile_number", (n_tones,), dtype=h5py.h5t.NATIVE_INT32
         )

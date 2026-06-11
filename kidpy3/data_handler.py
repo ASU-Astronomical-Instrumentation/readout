@@ -136,7 +136,7 @@ class RawDataFile:
             dtype=h5py.h5t.NATIVE_DOUBLE,
         )
         self.baseband_freqs = self.fh.create_dataset(
-            "global_data/baseband_freqs", (n_tones,), h5py.h5.NATIVE_DOUBLE
+            "global_data/baseband_freqs", (n_tones,), h5py.h5t.NATIVE_DOUBLE
         )
         self.detector_dx_dy_elevation_angle = self.fh.create_dataset(
             "global_data/detector_dx_dy_elevation_angle", (1,), h5py.h5t.NATIVE_DOUBLE

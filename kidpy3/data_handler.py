@@ -6,7 +6,7 @@
 
 :Date: 2025-08-22
 
-:Version: 3.0.1
+:Version: 3.1.0
 
 Brief overview
 --------------
@@ -30,6 +30,14 @@ Changes 3.0.1
     has_LOS = fh.attrs['has_lo_sweep']
     fh.close()
     ```
+
+Changes 3.1.0
+---------------
+- Removed Nia's modifications for ONR from 3.0.1. Global data that is not stored in the
+    `Rfchan` object must now be added manually by the end user's code.
+- `udp2.capture` no longer appends the LO sweep. Any code that expects an LO sweep to be
+    present should now explicitly call `append_lo_sweep` or add it manually.
+- Explicitly state dtype for `baseband_freqs` and `sample_rate` to resolve warning messages.
 
 """
 from __future__ import annotations
@@ -128,12 +136,12 @@ class RawDataFile:
             dtype=h5py.h5t.NATIVE_DOUBLE,
         )
         self.baseband_freqs = self.fh.create_dataset(
-            "global_data/baseband_freqs", (n_tones,)
+            "global_data/baseband_freqs", (n_tones,), h5py.h5t.NATIVE_DOUBLE
         )
         self.detector_dx_dy_elevation_angle = self.fh.create_dataset(
             "global_data/detector_dx_dy_elevation_angle", (1,), h5py.h5t.NATIVE_DOUBLE
         )
-        self.sample_rate = self.fh.create_dataset("global_data/sample_rate", (1,))
+        self.sample_rate = self.fh.create_dataset("global_data/sample_rate", (1,), h5py.h5t.NATIVE_DOUBLE)
         self.tile_number = self.fh.create_dataset(
             "global_data/tile_number", (n_tones,), dtype=h5py.h5t.NATIVE_INT32
         )
@@ -228,37 +236,7 @@ class RawDataFile:
         self.adc_q.resize((1024, n_sample))
         self.timestamp.resize((n_sample,))
 
-    def set_global_data(self, chan: Rfchan, params_dir: str=DEFAULT_PARAMS_DIRECTORY):
-
-        params_tile_file = Path(f'{params_dir}/params_tile_{chan.tile_name}.h5')
-
-        # Load values from params file if it exists
-        if params_tile_file.exists():
-            log = logger.getChild(__name__)
-            log.debug(f"Using params file: {params_tile_file}")
-            with h5py.File(params_tile_file, 'r') as params_fh:
-                chanmask = params_fh['chanmask'][:]
-                tone_powers = params_fh['tone_powers'][:]
-                baseband_freqs = params_fh['baseband_freqs'][:]
-                lo_freq = params_fh['lo_freq'][()]
-                detdx = params_fh['detector_delta_x'][:]
-                detdy = params_fh['detector_delta_y'][:]
-                det_ba = params_fh['detector_beam_ampl'][:]
-                det_pol = params_fh['detector_pol'][:]
-                dfoverf_per_mK = params_fh['dfoverf_per_mK'][:]
-
-            self.chanmask[:] = chanmask
-            self.baseband_freqs[:] = baseband_freqs
-            self.tone_powers[:] = tone_powers
-            self.lo_freq[0] = lo_freq
-            self.detector_delta_x[:] = detdx
-            self.detector_delta_y[:] = detdy
-            self.detector_beam_ampl[:] = det_ba
-            self.detector_pol[:] = det_pol
-            self.dfoverf_per_mK[:] = dfoverf_per_mK
-
-        # FIXME: THESE PARAMETERS ARE NOT GUARANTEED TO EXIST AND WILL CAUSE A CRASH IN NON-ONR SYSTEMS
-        # Use current channel attributes to set global data, taking precedence over params file
+    def set_global_data(self, chan: Rfchan):
         self.baseband_freqs[:] = chan.baseband_freqs
         self.tone_powers[:] = chan.tone_powers
         self.lo_freq[0] = chan.lo_freq
@@ -526,11 +504,11 @@ def get_last_lo(name: str):
     if np.size(check_date_folder) == 0:
         return ""
 
-    fstring = f"/data/{yymmdd}/{yymmdd}*{name}_LO_Sweep_*_high_res*"
+    fstring = f"/data/{yymmdd}/{yymmdd}*{name}_LO_Sweep_*"
     g = glob.glob(fstring)
 
     if len(g) == 0:
-        logger.warning(f"No \"high res\" LO sweep files found for {name} on {yymmdd}.")
+        logger.warning(f"No LO sweep files found for {name} on {yymmdd}.")
         return ""
 
     g.sort()

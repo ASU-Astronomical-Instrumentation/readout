@@ -1,6 +1,6 @@
 [project]
 name = "kidpy3"
-version = "0.3.7"
+version = "0.3.8-dev1+experimental_chunk_488"
 description = ""
 authors = [
     {name = "Cody Roberson",email = "carobers@asu.edu"}
@@ -10,11 +10,11 @@ requires-python = ">=3.12"
 dependencies = [
     "cython (>=3.1.3,<4.0.0)",
     "h5py (>=3.14.0,<4.0.0)",
-    "redis (>=6.4.0,<7.0.0)",
+    "redis (>=7.4.0,<8.0.0)",
     "numpy (>=2.3.2,<3.0.0)",
     "scipy (>=1.16.1,<2.0.0)",
     "matplotlib (>=3.10.5,<4.0.0)",
-    "setuptools (>=80.9.0,<81.0.0)",
+    "setuptools (>=82.0.1,<83.0.0)",
     "omegaconf (>=2.3.0,<3.0.0)",
     "pyserial (>=3.5,<4.0)",
     "tqdm (>=4.67.1,<5.0.0)",
@@ -28,14 +28,12 @@ requires = ["poetry-core>=2.0.0,<3.0.0", "setuptools", "cython"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.group.build.dependencies]
-setuptools = "^80.9.0"
-cython = "^3.1.3"
+setuptools = ">=80.9.0"
+cython = ">=3.1.3"
 
 [tool.poetry]
 include = [
     { path = "kidpy3/*.so", format = "wheel"},
-    { path = "kidpy3/_lib/*.so*", format = "wheel"},
-    { path = "kidpy3/_lib/*.so", format = "wheel"}
 ]
 
 # if not already excluded via .gitignore

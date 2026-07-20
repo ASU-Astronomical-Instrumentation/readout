@@ -3,95 +3,30 @@
   <component name="AutoImportSettings">
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
+  <component name="BackendCodeEditorMiscSettings">
+    <option name="/Default/Housekeeping/FeatureSuggestion/FeatureSuggestionManager/DisabledSuggesters/=SwitchToGoToActionSuggester/@EntryIndexedValue" value="true" type="bool" />
+    <option name="/Default/Housekeeping/GlobalSettingsUpgraded/IsUpgraded/@EntryValue" value="true" type="bool" />
+    <option name="/Default/RiderDebugger/RiderRestoreDecompile/RestoreDecompileSetting/@EntryValue" value="false" type="bool" />
+  </component>
+  <component name="CMakeProjectFlavorService">
+    <option name="flavorId" value="CMakePlainProjectFlavor" />
+  </component>
+  <component name="CMakeSettings">
+    <configurations>
+      <configuration PROFILE_NAME="Debug" ENABLED="true" CONFIG_NAME="Debug" />
+    </configurations>
+  </component>
   <component name="ChangeListManager">
-    <list default="true" id="bffb07dd-57d3-41b4-a0f7-5d2f0a4d3209" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5ACpublic.h" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5Apublic.h" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5Cpublic.h" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5DOpublic.h" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5DSpublic.h" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5Dpublic.h" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5ESdevelop.h" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5ESpublic.h" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5Epubgen.h" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5Epublic.h" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5FDcore.h" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5FDdevelop.h" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5FDdirect.h" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5FDfamily.h" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5FDhdfs.h" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5FDioc.h" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5FDlog.h" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5FDmirror.h" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5FDmpi.h" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5FDmpio.h" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5FDmulti.h" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5FDonion.h" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5FDpublic.h" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5FDros3.h" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5FDsec2.h" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5FDsplitter.h" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5FDstdio.h" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5FDsubfiling.h" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5FDwindows.h" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5Fpublic.h" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5Gpublic.h" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5IMpublic.h" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5Idevelop.h" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5Ipublic.h" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5LDpublic.h" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5LTpublic.h" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5Ldevelop.h" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5Lpublic.h" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5MMpublic.h" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5Mpublic.h" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5Opublic.h" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5PLextern.h" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5PLpublic.h" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5PTpublic.h" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5Ppublic.h" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5Rpublic.h" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5Spublic.h" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5TBpublic.h" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5TSdevelop.h" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5Tdevelop.h" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5Tpublic.h" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5VLconnector.h" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5VLconnector_passthru.h" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5VLnative.h" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5VLpassthru.h" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5VLpublic.h" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5Zdevelop.h" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5Zpublic.h" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5api_adpt.h" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5overflow.h" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5pubconf.h" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5public.h" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/H5version.h" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/hdf5.h" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/kidpy3/lib/include/hdf5_hl.h" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/kidpy3/lib/libhdf5.so" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/kidpy3/lib/libhdf5.so.310" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/kidpy3/lib/libhdf5.so.310.5.1" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/kidpy3/lib/libhdf5_cpp.so" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/kidpy3/lib/libhdf5_cpp.so.310" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/kidpy3/lib/libhdf5_cpp.so.310.0.6" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/kidpy3/lib/libhdf5_hl.so" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/kidpy3/lib/libhdf5_hl.so.310" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/kidpy3/lib/libhdf5_hl.so.310.0.6" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/kidpy3/lib/libhdf5_hl_cpp.so" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/kidpy3/lib/libhdf5_hl_cpp.so.310" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/kidpy3/lib/libhdf5_hl_cpp.so.310.0.6" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/kidpy3/lib/libhdf5_tools.so" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/kidpy3/lib/libhdf5_tools.so.310" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/kidpy3/lib/libhdf5_tools.so.310.0.6" afterDir="false" />
+    <list default="true" id="bffb07dd-57d3-41b4-a0f7-5d2f0a4d3209" name="Changes" comment="Completes cython build">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/scripts/build_dependencies.py" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/build_dependencies.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ClangdSettings">
+    <option name="formatViaClangd" value="false" />
   </component>
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
@@ -104,6 +39,13 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
+  <component name="MacroExpansionManager">
+    <option name="directoryName" value="772eZlye" />
+  </component>
+  <component name="McpProjectServerCommands">
+    <commands />
+    <urls />
+  </component>
   <component name="ProjectColorInfo">{
   &quot;customColor&quot;: &quot;&quot;,
   &quot;associatedIndex&quot;: 3
@@ -113,30 +55,43 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "Python.build.executor": "Run",
-    "Python.build_ext.executor": "Run",
-    "Python.h5py_dataset_usage.executor": "Run",
-    "Python.plot_deltas.executor": "Run",
-    "Python.run test_hdf5lib.executor": "Run",
-    "Python.test_hdf5.executor": "Run",
-    "Python.test_packet_generator.executor": "Run",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
-    "git-widget-placeholder": "c__datacap",
-    "junie.onboarding.icon.badge.shown": "true",
-    "last_opened_file_path": "/home/carobers/workspace/readout/dist/kidpy3/lib",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "settings.editor.selected.configurable": "preferences.keymap",
-    "to.speed.mode.migration.done": "true",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Python.build.executor&quot;: &quot;Run&quot;,
+    &quot;Python.build_ext.executor&quot;: &quot;Run&quot;,
+    &quot;Python.h5py_dataset_usage.executor&quot;: &quot;Run&quot;,
+    &quot;Python.makedatafile.executor&quot;: &quot;Run&quot;,
+    &quot;Python.plot_deltas.executor&quot;: &quot;Run&quot;,
+    &quot;Python.run test_hdf5lib.executor&quot;: &quot;Run&quot;,
+    &quot;Python.test_data_emitter.executor&quot;: &quot;Run&quot;,
+    &quot;Python.test_hdf5.executor&quot;: &quot;Run&quot;,
+    &quot;Python.test_packet_generator.executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.MCP Project settings loaded&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.RadMigrateCodeStyle&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.cidr.known.project.marker&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.readMode.enableVisualFormatting&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
+    &quot;cf.first.check.clang-format&quot;: &quot;false&quot;,
+    &quot;cidr.known.project.marker&quot;: &quot;true&quot;,
+    &quot;codeWithMe.voiceChat.enabledByDefault&quot;: &quot;false&quot;,
+    &quot;com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1&quot;: &quot;true&quot;,
+    &quot;database.data.extractors.current.export.id&quot;: &quot;Comma-separated (CSV)_id&quot;,
+    &quot;database.data.extractors.current.id&quot;: &quot;Comma-separated (CSV)_id&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;c__datacap&quot;,
+    &quot;junie.onboarding.icon.badge.shown&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/home/carobers/Workspace/readout/kidpy3/_data_collector/src/makedatafile.py&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.keymap&quot;,
+    &quot;to.speed.mode.migration.done&quot;: &quot;true&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="RdControllerToolWindowsLayoutState" isNewUi="true">
     <layout>
       <window_info id="Bookmarks" side_tool="true" />
@@ -185,30 +140,7 @@
       <recent name="$PROJECT_DIR$/kidpy3/_data_collector" />
     </key>
   </component>
-  <component name="RunManager" selected="Python.run test_hdf5lib">
-    <configuration name="build_ext" type="PythonConfigurationType" factoryName="Python">
-      <module name="readout" />
-      <option name="ENV_FILES" value="" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
-      <option name="IS_MODULE_SDK" value="false" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/scripts/build.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
-      <method v="2" />
-    </configuration>
+  <component name="RunManager" selected="Python.test_data_emitter">
     <configuration name="h5py_dataset_usage" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="readout" />
       <option name="ENV_FILES" value="" />
@@ -222,7 +154,9 @@
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="DEBUG_JUST_MY_CODE" value="true" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="RUN_TOOL" value="" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/scratchpad/h5py_dataset_usage.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
@@ -232,7 +166,7 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="h5py_dataset_usage" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+    <configuration name="makedatafile" type="PythonConfigurationType" factoryName="Python">
       <module name="readout" />
       <option name="ENV_FILES" value="" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -241,61 +175,60 @@
         <env name="PYTHONUNBUFFERED" value="1" />
       </envs>
       <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/scratchpad" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/scratchpad/h5py_dataset_usage.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
-      <method v="2" />
-    </configuration>
-    <configuration name="run test_hdf5lib" type="PythonConfigurationType" factoryName="Python">
-      <module name="readout" />
-      <option name="ENV_FILES" value="" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/scratchpad" />
+      <option name="SDK_NAME" value="Python 3.12 (readout)" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/kidpy3/_data_collector" />
       <option name="IS_MODULE_SDK" value="false" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="DEBUG_JUST_MY_CODE" value="false" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/scratchpad/test_hdf5.py" />
+      <option name="RUN_TOOL" value="" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/kidpy3/_data_collector/src/makedatafile.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
       <option name="MODULE_MODE" value="false" />
       <option name="REDIRECT_INPUT" value="false" />
       <option name="INPUT_FILE" value="" />
-      <method v="2">
-        <option name="RunConfigurationTask" enabled="true" run_configuration_name="build_ext" run_configuration_type="PythonConfigurationType" />
-      </method>
+      <method v="2" />
+    </configuration>
+    <configuration name="test_data_emitter" type="PythonConfigurationType" factoryName="Python" nameIsGenerated="true">
+      <module name="readout" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="SDK_NAME" value="Python 3.12 (readout)" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/kidpy3/_data_collector" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="DEBUG_JUST_MY_CODE" value="false" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="RUN_TOOL" value="" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/kidpy3/_data_collector/src/test_data_emitter.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
     </configuration>
     <list>
-      <item itemvalue="Python.run test_hdf5lib" />
-      <item itemvalue="Python.build_ext" />
+      <item itemvalue="Python.test_data_emitter" />
+      <item itemvalue="Python.makedatafile" />
       <item itemvalue="Python.h5py_dataset_usage" />
     </list>
-    <recent_temporary>
-      <list>
-        <item itemvalue="Python.h5py_dataset_usage" />
-      </list>
-    </recent_temporary>
   </component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-js-predefined-d6986cc7102b-e03c56caf84a-JavaScript-PY-252.23892.515" />
-        <option value="bundled-python-sdk-7e47963ff851-f0eec537fc84-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-252.23892.515" />
+        <option value="bundled-js-predefined-d6986cc7102b-3bd3a6803838-JavaScript-PY-261.22158.340" />
+        <option value="bundled-python-sdk-b63d5a1f7c97-b61e75351b1f-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-261.22158.340" />
       </set>
     </attachedChunks>
   </component>
@@ -318,11 +251,32 @@
       <workItem from="1756232048516" duration="15037000" />
       <workItem from="1756248524793" duration="6466000" />
       <workItem from="1756255310437" duration="7550000" />
+      <workItem from="1775489122779" duration="20000" />
+      <workItem from="1776545328199" duration="708000" />
+      <workItem from="1776898644087" duration="1389000" />
+      <workItem from="1777415551319" duration="8402000" />
+      <workItem from="1777489575844" duration="11105000" />
+      <workItem from="1777518450971" duration="40000" />
+      <workItem from="1777518543907" duration="904000" />
+      <workItem from="1777603430742" duration="2197000" />
     </task>
+    <task id="LOCAL-00001" summary="Completes cython build">
+      <option name="closed" value="true" />
+      <created>1777503032968</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1777503032968</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="Completes cython build" />
+    <option name="LAST_COMMIT_MESSAGE" value="Completes cython build" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -334,13 +288,19 @@
       </breakpoints>
     </breakpoint-manager>
   </component>
+  <component name="XSLT-Support.FileAssociations.UIState">
+    <expand />
+    <select />
+  </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/readout$test_packet_generator.coverage" NAME="test_packet_generator Coverage Results" MODIFIED="1756244688192" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/scratchpad" />
-    <SUITE FILE_PATH="coverage/readout$run_test_hdf5lib.coverage" NAME="run test_hdf5lib Coverage Results" MODIFIED="1756254442021" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/scratchpad" />
     <SUITE FILE_PATH="coverage/readout$build_ext.coverage" NAME="build_ext Coverage Results" MODIFIED="1756254441642" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/readout$h5py_dataset_usage.coverage" NAME="h5py_dataset_usage Coverage Results" MODIFIED="1756262130314" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/scratchpad" />
-    <SUITE FILE_PATH="coverage/readout$plot_deltas.coverage" NAME="plot_deltas Coverage Results" MODIFIED="1756261576256" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/scratchpad" />
-    <SUITE FILE_PATH="coverage/readout$build.coverage" NAME="build Coverage Results" MODIFIED="1756238943188" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/scripts" />
+    <SUITE FILE_PATH="coverage/readout$test_data_emitter.coverage" NAME="test_data_emitter Coverage Results" MODIFIED="1777496838874" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/kidpy3/_data_collector" />
     <SUITE FILE_PATH="coverage/readout$test_hdf5.coverage" NAME="test_hdf5 Coverage Results" MODIFIED="1756262134121" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/scratchpad" />
+    <SUITE FILE_PATH="coverage/readout$plot_deltas.coverage" NAME="plot_deltas Coverage Results" MODIFIED="1756261576256" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/scratchpad" />
+    <SUITE FILE_PATH="coverage/readout$makedatafile.coverage" NAME="makedatafile Coverage Results" MODIFIED="1777493279735" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/kidpy3/_data_collector" />
+    <SUITE FILE_PATH="coverage/readout$run_test_hdf5lib.coverage" NAME="run test_hdf5lib Coverage Results" MODIFIED="1756254442021" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/scratchpad" />
+    <SUITE FILE_PATH="coverage/readout$h5py_dataset_usage.coverage" NAME="h5py_dataset_usage Coverage Results" MODIFIED="1756262130314" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/scratchpad" />
+    <SUITE FILE_PATH="coverage/readout$test_packet_generator.coverage" NAME="test_packet_generator Coverage Results" MODIFIED="1756244688192" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/scratchpad" />
+    <SUITE FILE_PATH="coverage/readout$build.coverage" NAME="build Coverage Results" MODIFIED="1756238943188" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/scripts" />
   </component>
 </project>

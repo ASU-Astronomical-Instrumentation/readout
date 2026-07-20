@@ -186,7 +186,7 @@ class RawDataFile:
         # ****************************** Time Ordered Data *****************************
 
         const_n_sample = 0
-        const_chunk_size = 1
+        const_chunk_size = 488
         const_n_fftbins = 1024
         self.adc_i = self.fh.create_dataset(
             "time_ordered_data/adc_i",
